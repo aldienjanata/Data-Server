@@ -1,0 +1,12 @@
+# File Excel Asli (Data Sensitif)
+*.xlsx
+*.xls
+*.csv
+
+# Folder Supabase (Berisi Data Seed Sensitif)
+supabase/
+
+# File konfigurasi OS/Editor
+.DS_Store
+.vscode/
+node_modules/

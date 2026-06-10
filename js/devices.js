@@ -1,0 +1,353 @@
+// =====================================================
+// DEVICES.JS - Device Detail Page
+// =====================================================
+import { DevicesAPI, PortsAPI, AuditAPI } from './supabase.js';
+import { getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent, getStatusLabel, timeAgo, exportCSV } from './utils.js';
+import { canEdit, isAdmin } from './auth.js';
+import { showToast } from './app.js';
+import { renderOTBView, exportOTBData } from './otb.js';
+import { renderPanelView } from './panels.js';
+
+export async function renderDevicePage(deviceId, siteId, container) {
+  if (!deviceId) { window.App.navigate('dashboard'); return; }
+
+  try {
+    const device = await DevicesAPI.getById(deviceId);
+    const typeName = device.device_types?.name || 'OTHER';
+    const icon    = getDeviceIcon(typeName);
+    const color   = getDeviceColor(typeName);
+    const bgColor = getDeviceBgColor(typeName);
+
+    // Get stats
+    const stats = await PortsAPI.getStats(deviceId);
+    const pct = calcPercent(stats.filled, stats.total);
+
+    container.innerHTML = `
+      <div>
+        <!-- Breadcrumb -->
+        <div class="breadcrumb">
+          <span class="breadcrumb__item" onclick="App.navigate('dashboard')">🏠</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item" onclick="App.navigate('site',{siteId:'${device.site_id}'})">${device.sites?.name || 'Site'}</span>
+          <span class="breadcrumb__sep">›</span>
+          <span class="breadcrumb__item active">${device.name}</span>
+        </div>
+
+        <!-- Device Header Card -->
+        <div class="device-detail-header" style="border-color:${color}33">
+          <div class="device-detail-icon" style="background:${bgColor}">${icon}</div>
+          <div style="flex:1;min-width:0">
+            <div class="device-detail-name">${device.name}</div>
+            <div class="device-detail-type">
+              <span class="badge badge-${typeName.toLowerCase()}">${typeName}</span>
+              ${device.model ? `<span style="font-size:0.8rem;color:var(--color-text-muted);margin-left:6px">${device.model}</span>` : ''}
+            </div>
+            ${device.rack_position ? `<div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:4px">Rack: ${device.rack_position}</div>` : ''}
+          </div>
+          ${canEdit() ? `
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn btn-ghost btn-icon-sm" onclick="showEditDeviceModal('${deviceId}','${device.name}','${device.model||''}','${device.rack_position||''}','${device.notes||''}')" title="Edit">✏️</button>
+              ${isAdmin() ? `<button class="btn btn-ghost btn-icon-sm" style="color:var(--color-danger)" onclick="confirmDeleteDevice('${deviceId}','${device.site_id}')" title="Hapus">🗑️</button>` : ''}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Stats Row -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-5)">
+          <div class="stat-card" style="--stat-accent:var(--color-filled);--stat-accent-bg:rgba(16,185,129,0.1);padding:12px">
+            <div class="stat-card__value" style="font-size:1.5rem">${stats.filled}</div>
+            <div class="stat-card__label">Terisi</div>
+          </div>
+          <div class="stat-card" style="padding:12px">
+            <div class="stat-card__value" style="font-size:1.5rem">${stats.empty}</div>
+            <div class="stat-card__label">Kosong</div>
+          </div>
+          <div class="stat-card" style="--stat-accent:var(--color-unverified);--stat-accent-bg:rgba(245,158,11,0.1);padding:12px">
+            <div class="stat-card__value" style="font-size:1.5rem">${stats.unverified || 0}</div>
+            <div class="stat-card__label">Belum Verif</div>
+          </div>
+          <div class="stat-card" style="--stat-accent:${color};--stat-accent-bg:${bgColor};padding:12px">
+            <div class="stat-card__value" style="font-size:1.5rem;color:${color}">${pct}%</div>
+            <div class="stat-card__label">Penggunaan</div>
+          </div>
+        </div>
+
+        <!-- Port Filter Chips -->
+        <div class="chip-group" style="margin-bottom:var(--space-4)" id="port-filters">
+          <div class="chip active" onclick="filterPorts(this,'all')" data-filter="all">Semua</div>
+          <div class="chip" onclick="filterPorts(this,'filled')" data-filter="filled">🟢 Terisi</div>
+          <div class="chip" onclick="filterPorts(this,'empty')" data-filter="empty">⚪ Kosong</div>
+          <div class="chip" onclick="filterPorts(this,'unverified')" data-filter="unverified">🟡 Belum Verifikasi</div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);flex-wrap:wrap">
+          <button class="btn btn-secondary btn-sm" onclick="exportDevice('${deviceId}','${typeName}','${device.name}')">
+            📥 Export
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
+            📋 Riwayat
+          </button>
+          ${canEdit() ? `
+            <button class="btn btn-secondary btn-sm" onclick="fillAllEmpty('${deviceId}')">
+              ⚡ Isi Port
+            </button>
+          ` : ''}
+        </div>
+
+        <!-- Device Port View -->
+        <div id="device-port-view"></div>
+
+        <!-- Audit Log Section -->
+        <div id="audit-section" style="margin-top:var(--space-5)"></div>
+      </div>
+    `;
+
+    // Render appropriate view based on device type
+    const portView = document.getElementById('device-port-view');
+    if (typeName === 'OTB') {
+      await renderOTBView(device, portView);
+    } else {
+      await renderPanelView(device, portView);
+    }
+
+    // Load recent audit
+    loadRecentAudit(deviceId);
+
+  } catch (err) {
+    console.error('[Device] Error:', err);
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state__icon">⚠️</div>
+        <div class="empty-state__title">Gagal memuat perangkat</div>
+        <div class="empty-state__desc">${err.message}</div>
+        <button class="btn btn-secondary" onclick="history.back()">← Kembali</button>
+      </div>
+    `;
+  }
+}
+
+// =====================================================
+// PORT FILTER
+// =====================================================
+window.filterPorts = function(chipEl, filter) {
+  document.querySelectorAll('#port-filters .chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+
+  // Show/hide port cells based on filter
+  document.querySelectorAll('.port-cell, .panel-port').forEach(cell => {
+    const status = cell.getAttribute('data-status') || 'empty';
+    if (filter === 'all' || status === filter) {
+      cell.style.display = '';
+      cell.style.opacity = '1';
+    } else {
+      cell.style.display = 'none';
+    }
+  });
+};
+
+// =====================================================
+// EXPORT DEVICE DATA
+// =====================================================
+window.exportDevice = async function(deviceId, typeName, deviceName) {
+  try {
+    showToast('📥 Menyiapkan export...', 'info');
+    let rows;
+    if (typeName === 'OTB') {
+      const device = await DevicesAPI.getById(deviceId);
+      rows = await exportOTBData(device);
+    } else {
+      const ports = await PortsAPI.getByDevice(deviceId);
+      rows = ports.map(p => ({
+        'Port': p.port_number,
+        'Detail Port': p.connection_detail || '',
+        'Koneksi': p.connection_label || '',
+        'Status': getStatusLabel(p.status),
+        'Catatan': p.notes || '',
+        'Update': p.updated_at || ''
+      }));
+    }
+    exportCSV(rows, `${deviceName}_${new Date().toISOString().slice(0, 10)}.csv`);
+    showToast('✅ Export berhasil!', 'success');
+  } catch (err) {
+    showToast(`❌ Export gagal: ${err.message}`, 'error');
+  }
+};
+
+// =====================================================
+// SHOW AUDIT FOR DEVICE
+// =====================================================
+window.showAuditForDevice = async function(deviceId, deviceName) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()" style="max-height:75vh;overflow-y:auto">
+      <div class="modal__handle"></div>
+      <div class="modal__title">📋 Riwayat — ${deviceName}</div>
+      <div id="audit-modal-content">
+        <div class="skeleton" style="height:200px;border-radius:var(--radius-lg)"></div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const logs = await AuditAPI.getByDevice(deviceId, 30);
+  const content = document.getElementById('audit-modal-content');
+  if (!logs.length) {
+    content.innerHTML = `<div class="empty-state"><div class="empty-state__icon">📋</div><div>Belum ada riwayat</div></div>`;
+    return;
+  }
+
+  content.innerHTML = logs.map(log => `
+    <div class="audit-item">
+      <div class="audit-item__icon ${log.action}">${{ created:'➕', updated:'✏️', deleted:'🗑️', verified:'✅' }[log.action]}</div>
+      <div class="audit-item__content">
+        <div class="audit-item__title">Port ${log.port_number} — ${log.action}</div>
+        ${log.new_connection_label ? `<div class="audit-item__meta" style="color:var(--color-filled)">${log.new_connection_label}</div>` : ''}
+        <div class="audit-item__meta">${log.changed_by || 'Anonim'} • ${timeAgo(log.changed_at)}</div>
+      </div>
+    </div>
+  `).join('');
+};
+
+// =====================================================
+// RECENT AUDIT IN PAGE
+// =====================================================
+async function loadRecentAudit(deviceId) {
+  const section = document.getElementById('audit-section');
+  if (!section) return;
+  try {
+    const logs = await AuditAPI.getByDevice(deviceId, 5);
+    if (!logs.length) return;
+    section.innerHTML = `
+      <div class="section-header">
+        <div class="section-title">📋 Perubahan Terkini</div>
+        <button class="btn btn-ghost btn-sm" onclick="showAuditForDevice('${deviceId}','Perangkat')">Lihat Semua</button>
+      </div>
+      <div class="card">
+        <div class="card__body" style="padding:8px 20px">
+          ${logs.map(log => `
+            <div class="audit-item">
+              <div class="audit-item__icon ${log.action}">${{ created:'➕', updated:'✏️', deleted:'🗑️', verified:'✅' }[log.action]}</div>
+              <div class="audit-item__content">
+                <div class="audit-item__title">Port ${log.port_number}</div>
+                ${log.new_connection_label ? `<div style="font-size:0.75rem;color:var(--color-filled)">${log.new_connection_label}</div>` : ''}
+                <div class="audit-item__meta">${log.changed_by || 'Anonim'} • ${timeAgo(log.changed_at)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  } catch {}
+}
+
+// =====================================================
+// EDIT DEVICE MODAL
+// =====================================================
+window.showEditDeviceModal = function(deviceId, name, model, rack, notes) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">✏️ Edit Perangkat</div>
+      <div class="form-group">
+        <label class="form-label">Nama Perangkat</label>
+        <input class="form-input" id="edit-dev-name" type="text" value="${name}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Model</label>
+        <input class="form-input" id="edit-dev-model" type="text" value="${model}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Posisi Rack</label>
+        <input class="form-input" id="edit-dev-rack" type="text" value="${rack}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catatan</label>
+        <textarea class="form-textarea" id="edit-dev-notes">${notes}</textarea>
+      </div>
+      <div class="modal__actions">
+        <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-backdrop').remove()">Batal</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitEditDevice('${deviceId}')">💾 Simpan</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+};
+
+window.submitEditDevice = async function(deviceId) {
+  const name  = document.getElementById('edit-dev-name').value.trim();
+  const model = document.getElementById('edit-dev-model').value.trim();
+  const rack  = document.getElementById('edit-dev-rack').value.trim();
+  const notes = document.getElementById('edit-dev-notes').value.trim();
+  const btn = document.querySelector('.modal .btn-primary');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    await DevicesAPI.update(deviceId, {
+      name, model: model || null,
+      rack_position: rack || null,
+      notes: notes || null
+    });
+    document.querySelector('.modal-backdrop').remove();
+    showToast('✅ Perangkat berhasil diperbarui', 'success');
+    location.reload();
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+};
+
+// =====================================================
+// DELETE DEVICE CONFIRM
+// =====================================================
+window.confirmDeleteDevice = function(deviceId, siteId) {
+  if (!confirm('⚠️ Hapus perangkat ini? Semua data port akan ikut terhapus. Yakin?')) return;
+  DevicesAPI.delete(deviceId)
+    .then(() => {
+      showToast('🗑️ Perangkat berhasil dihapus', 'info');
+      window.App.navigate('site', { siteId });
+    })
+    .catch(err => showToast(`❌ ${err.message}`, 'error'));
+};
+
+// =====================================================
+// FILL ALL EMPTY
+// =====================================================
+window.fillAllEmpty = function(deviceId) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">⚡ Isi Port Massal</div>
+      <p style="color:var(--color-text-muted);margin-bottom:var(--space-4)">
+        Tandai semua port kosong sebagai "Belum Verifikasi" untuk diisi nanti
+      </p>
+      <div class="modal__actions">
+        <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-backdrop').remove()">Batal</button>
+        <button class="btn btn-warning" style="flex:2;background:rgba(245,158,11,0.15);color:var(--color-warning);border:1px solid rgba(245,158,11,0.3)" 
+                onclick="doMarkUnverified('${deviceId}')">🟡 Tandai Belum Verifikasi</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+};
+
+window.doMarkUnverified = async function(deviceId) {
+  try {
+    const ports = await PortsAPI.getByDevice(deviceId);
+    const emptyPorts = ports.filter(p => p.status === 'empty');
+    await Promise.all(emptyPorts.map(p => PortsAPI.update(p.id, { status: 'unverified' })));
+    document.querySelector('.modal-backdrop').remove();
+    showToast(`✅ ${emptyPorts.length} port ditandai belum verifikasi`, 'success');
+    location.reload();
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  }
+};

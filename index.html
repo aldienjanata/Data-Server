@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Aplikasi manajemen data perangkat server dan jaringan multi-site (Banyumas, Cilacap, Rowokele, Kebumen)">
+  <meta name="keywords" content="server, OTB, port, jaringan, data, management, Banyumas">
+  <meta name="theme-color" content="#3b82f6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ServerData">
+  <meta name="msapplication-TileColor" content="#3b82f6">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Server Data Manager">
+  <meta property="og:description" content="Manajemen data port & perangkat jaringan multi-site">
+  <meta property="og:type" content="website">
+
+  <title>Server Data Manager — Port & Perangkat Jaringan</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512.png">
+
+  <!-- Google Fonts - Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/pages.css">
+
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+
+  <!-- SheetJS (for Excel import) -->
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js" defer></script>
+
+  <!-- Inline Critical CSS -->
+  <style>
+    /* Critical above-fold styles to prevent FOUC */
+    html { background: #050b17; }
+    body { margin: 0; background: #050b17; }
+
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: #050b17;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 9999;
+      transition: opacity 0.35s ease;
+    }
+    #loading-screen.fade-out { opacity: 0; pointer-events: none; }
+
+    .loading-logo-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      animation: glow 2s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(59,130,246,0.25);
+    }
+
+    @keyframes glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.25); }
+      50%       { box-shadow: 0 0 50px rgba(59,130,246,0.5); }
+    }
+
+    .loading-app-name {
+      font-family: 'Inter', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      letter-spacing: -0.01em;
+    }
+
+    .loading-app-sub {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      color: #475569;
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .loading-dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3b82f6;
+      animation: dot-bounce 1.2s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; background: #8b5cf6; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; background: #06b6d4; }
+
+    @keyframes dot-bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1.1); opacity: 1; }
+    }
+
+    /* Safe area support */
+    #app {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading Screen -->
+  <div id="loading-screen">
+    <div class="loading-logo-icon">🖥️</div>
+    <div>
+      <div class="loading-app-name">Server Data Manager</div>
+      <div class="loading-app-sub" style="text-align:center;margin-top:4px">Memuat data jaringan...</div>
+    </div>
+    <div class="loading-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <!-- App Shell -->
+  <div id="app">
+    <!-- Rendered dynamically by app.js -->
+  </div>
+
+  <!-- Main App Entry Point -->
+  <script type="module" src="/js/app.js"></script>
+
+  <!-- Inline micro-interactions for non-module browsers -->
+  <script>
+    // Prevent double-tap zoom on mobile
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) e.preventDefault();
+      lastTouchEnd = now;
+    }, { passive: false });
+
+    // Handle back button on Android
+    window.addEventListener('popstate', function(e) {
+      // App.js handles this via hashchange
+    });
+
+    // Prevent pinch zoom
+    document.addEventListener('gesturestart', function(e) {
+      e.preventDefault();
+    });
+  </script>
+
+  <!-- Noscript Fallback -->
+  <noscript>
+    <div style="
+      font-family:sans-serif;text-align:center;padding:48px 24px;
+      background:#050b17;color:#f1f5f9;min-height:100vh;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+    ">
+      <div style="font-size:48px;margin-bottom:16px">⚠️</div>
+      <h2>JavaScript Diperlukan</h2>
+      <p style="color:#94a3b8">Server Data Manager memerlukan JavaScript untuk berjalan. Aktifkan JavaScript di browser Anda.</p>
+    </div>
+  </noscript>
+</body>
+</html>
