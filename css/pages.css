@@ -11,10 +11,29 @@
   display: grid;
   place-items: center;
   padding: var(--space-6);
-  background:
-    radial-gradient(ellipse at 20% 50%, rgba(59,130,246,0.1) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(139,92,246,0.08) 0%, transparent 50%),
-    var(--color-bg-base);
+  background-color: var(--color-bg-base);
+  background-image: 
+    linear-gradient(rgba(59, 130, 246, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0;
+  animation: grid-move 20s linear infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes grid-move {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+.login-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, transparent 10%, var(--color-bg-base) 80%);
+  z-index: -1;
+  pointer-events: none;
 }
 
 .login-card {
@@ -46,15 +65,7 @@
 }
 
 .login-logo__icon {
-  width: 72px;
-  height: 72px;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
-  border-radius: 20px;
-  display: grid;
-  place-items: center;
-  font-size: 36px;
-  margin: 0 auto var(--space-4);
-  box-shadow: 0 8px 32px rgba(59,130,246,0.35);
+  display: none; /* Replaced by Logo.png */
 }
 
 .login-logo__title {

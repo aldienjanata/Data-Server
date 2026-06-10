@@ -16,7 +16,7 @@ export function renderLoginPage() {
     <div class="login-page">
       <div class="login-card fade-in">
         <div class="login-logo">
-          <div class="login-logo__icon">🖥️</div>
+          <img src="/Logo.png" alt="Company Logo" style="width: 100px; height: 100px; object-fit: contain; margin: 0 auto var(--space-4); display: block; border-radius: 20px; filter: drop-shadow(0 10px 20px rgba(59,130,246,0.25));">
           <div class="login-logo__title">Server Data Manager</div>
           <div class="login-logo__subtitle">Manajemen Port & Perangkat Jaringan</div>
         </div>
