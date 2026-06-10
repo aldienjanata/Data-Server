@@ -2,7 +2,7 @@
 // APP.JS - Main Application Router & Controller
 // =====================================================
 import { initSupabase, SitesAPI, DevicesAPI, PortsAPI, AuditAPI } from './supabase.js';
-import { initAuth, currentUser, currentProfile, canEdit, isGuest, renderLoginPage, handleSignOut } from './auth.js';
+import { initAuth, currentUser, currentProfile, canEdit, isGuest, renderLoginPage, initLoginAnimation, handleSignOut } from './auth.js';
 import { renderDashboard } from './dashboard.js';
 import { renderSitePage } from './sites.js';
 import { renderDevicePage } from './devices.js';
@@ -323,9 +323,15 @@ const Router = {
 // =====================================================
 // ROUTE HANDLERS
 // =====================================================
+let _cleanupLoginAnim = null;
 async function renderLoginRoute() {
+  if (_cleanupLoginAnim) { _cleanupLoginAnim(); _cleanupLoginAnim = null; }
   setPageContent(renderLoginPage());
   hideBottomNav();
+  // Start canvas animation after DOM is ready
+  requestAnimationFrame(() => {
+    _cleanupLoginAnim = initLoginAnimation();
+  });
 }
 
 async function renderDashboardRoute() {
@@ -610,7 +616,7 @@ async function initApp() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => console.log('[SW] Registered:', reg.scope))
-      .catch(err => console.error('[SW] Failed:', err));
+      .catch(err => console.warn('[SW] Failed (non-critical):', err));
   }
 }
 

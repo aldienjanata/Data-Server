@@ -14,11 +14,16 @@ export let currentProfile = null;
 export function renderLoginPage() {
   return `
     <div class="login-page">
-      <div class="login-card fade-in">
+      <canvas id="login-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
+      <div class="login-card fade-in" style="position:relative;z-index:1;">
         <div class="login-logo">
-          <img src="/Logo.png" alt="Company Logo" style="width: 100px; height: 100px; object-fit: contain; margin: 0 auto var(--space-4); display: block; border-radius: 20px; filter: drop-shadow(0 10px 20px rgba(59,130,246,0.25));">
+          <img src="Logo.png" alt="Company Logo" class="login-company-logo"
+               onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='flex';">
+          <div id="login-logo-fallback" style="display:none;width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);align-items:center;justify-content:center;margin:0 auto var(--space-4);">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><circle cx="7" cy="6" r="1" fill="white" stroke="none"/><circle cx="7" cy="12" r="1" fill="white" stroke="none"/></svg>
+          </div>
           <div class="login-logo__title">Server Data Manager</div>
-          <div class="login-logo__subtitle">Manajemen Port & Perangkat Jaringan</div>
+          <div class="login-logo__subtitle">Manajemen Port &amp; Perangkat Jaringan</div>
         </div>
 
         <div id="auth-form">
@@ -47,12 +52,12 @@ export function renderLoginPage() {
           </div>
 
           <button class="btn btn-primary btn-full btn-lg" id="auth-submit-btn"
-                  onclick="handleAuthSubmit()" style="margin-top:8px">
+                  onclick="handleAuthSubmit()" style="margin-top:16px">
             Masuk
           </button>
         </div>
 
-        <div class="divider" style="margin:24px 0"></div>
+        <div class="divider" style="margin:20px 0"></div>
 
         <div style="text-align:center">
           <button class="btn btn-ghost" onclick="continueAsGuest()" style="font-size:0.85rem;color:var(--color-text-muted)">
@@ -62,6 +67,98 @@ export function renderLoginPage() {
       </div>
     </div>
   `;
+}
+
+// Initialize canvas animation after login page renders
+export function initLoginAnimation() {
+  const canvas = document.getElementById('login-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Create floating nodes (server icons)
+  const nodes = Array.from({ length: 28 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.4,
+    vy: (Math.random() - 0.5) * 0.4,
+    size: 4 + Math.random() * 8,
+    opacity: 0.1 + Math.random() * 0.25,
+    type: Math.floor(Math.random() * 3),
+    pulse: Math.random() * Math.PI * 2,
+  }));
+
+  function drawNode(node) {
+    ctx.save();
+    ctx.globalAlpha = node.opacity * (0.7 + 0.3 * Math.sin(node.pulse));
+    const color = node.type === 0 ? '59, 130, 246' : '139, 92, 246';
+    ctx.strokeStyle = `rgba(${color}, 1)`;
+    ctx.lineWidth = 1;
+    ctx.translate(node.x, node.y);
+
+    if (node.type === 0) {
+      ctx.strokeRect(-node.size / 2, -node.size / 2, node.size, node.size);
+      ctx.beginPath(); ctx.moveTo(-node.size / 2, 0); ctx.lineTo(node.size / 2, 0); ctx.stroke();
+    } else if (node.type === 1) {
+      ctx.beginPath(); ctx.arc(0, 0, node.size / 2, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0, 0, node.size / 6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${color}, 0.5)`; ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(0, -node.size / 2); ctx.lineTo(node.size / 2, 0);
+      ctx.lineTo(0, node.size / 2); ctx.lineTo(-node.size / 2, 0);
+      ctx.closePath(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawConnections() {
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x;
+        const dy = nodes[i].y - nodes[j].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          ctx.save();
+          ctx.globalAlpha = (1 - dist / 150) * 0.12;
+          ctx.strokeStyle = 'rgba(59, 130, 246, 1)';
+          ctx.lineWidth = 0.5;
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(nodes[i].x, nodes[i].y);
+          ctx.lineTo(nodes[j].x, nodes[j].y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+    }
+  }
+
+  let animId;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawConnections();
+    nodes.forEach(n => {
+      n.x += n.vx;
+      n.y += n.vy;
+      n.pulse += 0.02;
+      if (n.x < -20) n.x = canvas.width + 20;
+      if (n.x > canvas.width + 20) n.x = -20;
+      if (n.y < -20) n.y = canvas.height + 20;
+      if (n.y > canvas.height + 20) n.y = -20;
+      drawNode(n);
+    });
+    animId = requestAnimationFrame(animate);
+  }
+
+  animate();
+  return () => { cancelAnimationFrame(animId); window.removeEventListener('resize', resize); };
 }
 
 // =====================================================
