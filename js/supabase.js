@@ -3,9 +3,9 @@
 // js/supabase.js
 // =====================================================
 
-// ⚠️ GANTI DENGAN CREDENTIALS SUPABASE ANDA
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Gunakan Environment Variables dari Vercel / Vite (.env)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Load Supabase from CDN (in index.html)
 let supabase = null;

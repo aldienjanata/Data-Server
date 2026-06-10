@@ -1,0 +1,26 @@
+{
+  "name": "data-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "sw.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aldienjanata/Data-Server.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/aldienjanata/Data-Server/issues"
+  },
+  "homepage": "https://github.com/aldienjanata/Data-Server#readme",
+  "devDependencies": {
+    "vite": "^8.0.16"
+  }
+}

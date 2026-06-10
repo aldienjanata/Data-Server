@@ -9,4 +9,8 @@ supabase/
 # File konfigurasi OS/Editor
 .DS_Store
 .vscode/
+
+# Node/Vite
 node_modules/
+dist/
+.env
