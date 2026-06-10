@@ -2,11 +2,12 @@
 // SERVICE WORKER - Server Data Manager PWA
 // =====================================================
 
-const CACHE_NAME = 'server-data-v1.0.0';
+const CACHE_NAME = 'server-data-v1.0.1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+  '/Logo.png',
   '/css/main.css',
   '/css/components.css',
   '/css/pages.css',
