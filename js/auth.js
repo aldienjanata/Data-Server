@@ -23,9 +23,9 @@ export function renderLoginPage() {
 
         <div id="auth-form">
           <div class="form-group">
-            <label class="form-label" for="auth-email">Email</label>
-            <input class="form-input" type="email" id="auth-email" 
-                   placeholder="nama@email.com" autocomplete="email" required>
+            <label class="form-label" for="auth-username">Username</label>
+            <input class="form-input" type="text" id="auth-username" 
+                   placeholder="admin" autocomplete="username" required>
           </div>
 
           <div class="form-group">
@@ -49,12 +49,6 @@ export function renderLoginPage() {
           <button class="btn btn-primary btn-full btn-lg" id="auth-submit-btn"
                   onclick="handleAuthSubmit()" style="margin-top:8px">
             Masuk
-          </button>
-
-          <div class="divider--text" style="margin:20px 0">atau</div>
-
-          <button class="btn btn-secondary btn-full" onclick="toggleAuthMode()" id="auth-toggle-btn">
-            Daftar Akun Baru
           </button>
         </div>
 
@@ -108,38 +102,34 @@ window.togglePasswordVisibility = function() {
 // HANDLE AUTH SUBMIT
 // =====================================================
 window.handleAuthSubmit = async function() {
-  const email = document.getElementById('auth-email').value.trim();
+  const usernameInput = document.getElementById('auth-username').value.trim();
   const password = document.getElementById('auth-password').value;
-  const name = document.getElementById('auth-name')?.value.trim();
   const btn = document.getElementById('auth-submit-btn');
 
-  if (!email || !password) {
-    showToast('Email dan password wajib diisi', 'warning');
+  if (!usernameInput || !password) {
+    showToast('Username dan password wajib diisi', 'warning');
     return;
   }
+
+  // Format username to email for Supabase Auth
+  const email = usernameInput.includes('@') ? usernameInput : `${usernameInput}@server.local`;
 
   btn.classList.add('loading');
   btn.disabled = true;
 
   try {
-    if (isRegisterMode) {
-      await AuthAPI.signUp(email, password, name || email);
-      showToast('✅ Akun berhasil dibuat! Silakan cek email untuk verifikasi', 'success');
-      isRegisterMode = false;
-      window.toggleAuthMode();
-    } else {
-      const data = await AuthAPI.signIn(email, password);
-      currentUser = data.user;
-      currentProfile = await AuthAPI.getProfile(currentUser.id);
-      vibrate([10, 5, 10]);
-      showToast(`👋 Selamat datang, ${currentProfile?.full_name || email}!`, 'success');
-      storage.set('lastUser', { email, name: currentProfile?.full_name });
-      window.App.navigate('dashboard');
-    }
+    const data = await AuthAPI.signIn(email, password);
+    currentUser = data.user;
+    currentProfile = await AuthAPI.getProfile(currentUser.id);
+    vibrate([10, 5, 10]);
+    showToast(`👋 Selamat datang, ${currentProfile?.full_name || usernameInput}!`, 'success');
+    storage.set('lastUser', { email, name: currentProfile?.full_name });
+    window.App.navigate('dashboard');
   } catch (err) {
     console.error('[Auth]', err);
+    // Ignore internal schema errors if login actually fails due to credentials
     const msg = err.message?.includes('Invalid login') 
-      ? 'Email atau password salah' 
+      ? 'Username atau password salah' 
       : (err.message || 'Terjadi kesalahan');
     showToast(`❌ ${msg}`, 'error');
   } finally {

@@ -427,8 +427,10 @@ code, pre {
 #toast-container {
   position: fixed;
   top: calc(var(--header-height) + var(--space-3));
-  right: var(--space-4);
-  left: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - var(--space-8));
+  max-width: 500px;
   z-index: 9998;
   display: flex;
   flex-direction: column;
