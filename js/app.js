@@ -277,7 +277,8 @@ const Router = {
     'device':   renderDeviceRoute,
     'search':   renderSearchRoute,
     'settings': renderSettingsRoute,
-    'audit':    renderAuditRoute
+    'audit':    renderAuditRoute,
+    'import':   renderImportRoute
   },
 
   navigate(page, params = {}) {
@@ -364,6 +365,13 @@ async function renderSettingsRoute() {
   const { renderSettingsPage: renderSettings } = await import('./settings.js');
   setPageContent('<div class="page-content"></div>');
   await renderSettings(document.querySelector('.page-content'));
+}
+
+async function renderImportRoute() {
+  showBottomNav();
+  setPageContent('<div class="page-content"></div>');
+  const { renderImportPage } = await import('./import.js');
+  await renderImportPage(document.querySelector('.page-content'));
 }
 
 async function renderAuditRoute() {
@@ -462,6 +470,10 @@ function updateBottomNav(page) {
   document.querySelectorAll('.bottom-nav__item').forEach(item => {
     item.classList.toggle('active', item.dataset.page === page);
   });
+  // Also update sidebar
+  document.querySelectorAll('.app-sidebar__item[data-page]').forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
 }
 
 // =====================================================
@@ -558,6 +570,41 @@ async function initApp() {
 
   // Render shell
   document.getElementById('app').innerHTML = `
+    <aside class="app-sidebar" id="app-sidebar">
+      <div class="app-sidebar__brand">
+        <div class="app-sidebar__brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="12" width="20" height="6" rx="1"/><circle cx="5.5" cy="6" r="1" fill="white" stroke="none"/><circle cx="5.5" cy="15" r="1" fill="white" stroke="none"/></svg>
+        </div>
+        <div>
+          <div class="app-sidebar__brand-name">ServerData</div>
+          <div class="app-sidebar__brand-sub">Network Manager</div>
+        </div>
+      </div>
+      <div class="app-sidebar__section">
+        <div class="app-sidebar__section-label">Menu Utama</div>
+        <button class="app-sidebar__item active" data-page="dashboard" onclick="App.navigate('dashboard')">
+          <span class="app-sidebar__item-icon">🏠</span> Dashboard
+        </button>
+        <button class="app-sidebar__item" data-page="search" onclick="App.navigate('search')">
+          <span class="app-sidebar__item-icon">🔍</span> Cari Port
+        </button>
+        <button class="app-sidebar__item" data-page="import" onclick="App.navigate('import')">
+          <span class="app-sidebar__item-icon">📥</span> Import Data
+        </button>
+        <button class="app-sidebar__item" data-page="audit" onclick="App.navigate('audit')">
+          <span class="app-sidebar__item-icon">📋</span> Riwayat
+        </button>
+      </div>
+      <div class="app-sidebar__spacer"></div>
+      <div class="app-sidebar__footer">
+        <button class="app-sidebar__item" data-page="settings" onclick="App.navigate('settings')">
+          <span class="app-sidebar__item-icon">⚙️</span> Pengaturan
+        </button>
+        <button class="app-sidebar__item" onclick="App.signOut()" style="color:var(--color-danger)">
+          <span class="app-sidebar__item-icon">🚪</span> Keluar
+        </button>
+      </div>
+    </aside>
     ${renderHeader()}
     <main class="app-main">
       <div class="page-content"></div>
@@ -570,6 +617,10 @@ async function initApp() {
       <button class="bottom-nav__item" data-page="search" onclick="App.navigate('search')">
         <span class="bottom-nav__icon">🔍</span>
         <span class="bottom-nav__label">Cari</span>
+      </button>
+      <button class="bottom-nav__item" data-page="import" onclick="App.navigate('import')">
+        <span class="bottom-nav__icon">📥</span>
+        <span class="bottom-nav__label">Import</span>
       </button>
       <button class="bottom-nav__item" data-page="audit" onclick="App.navigate('audit')">
         <span class="bottom-nav__icon">📋</span>

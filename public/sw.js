@@ -2,7 +2,7 @@
 // SERVICE WORKER - Server Data Manager PWA
 // =====================================================
 
-const CACHE_NAME = 'server-data-v1.0.1';
+const CACHE_NAME = 'server-data-v1.0.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
