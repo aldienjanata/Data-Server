@@ -380,7 +380,6 @@ const Router = {
     'dashboard': renderDashboardRoute,
     'site':     renderSiteRoute,
     'device':   renderDeviceRoute,
-    'search':   renderSearchRoute,
     'settings': renderSettingsRoute,
     'audit':    renderAuditRoute,
     'list-data': renderListDataRoute
