@@ -6,7 +6,6 @@ import { initAuth, currentUser, currentProfile, canEdit, isGuest, renderLoginPag
 import { renderDashboard } from './dashboard.js';
 import { renderSitePage } from './sites.js';
 import { renderDevicePage } from './devices.js';
-import { renderSearchPage } from './search.js';
 import { renderSettingsPage } from './settings.js';
 import { OfflineQueue } from './supabase.js';
 import { storage, vibrate, isOnline } from './utils.js';
@@ -240,7 +239,7 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       option.dataset.port = p.port_number;
       // Show if it's filled
       const statusIcon = p.status === 'filled' ? '🔴' : '🟢';
-      option.textContent = \`\${statusIcon} Port \${p.port_number} \${p.connection_label ? '('+p.connection_label+')' : ''}\`;
+      option.textContent = `${statusIcon} Port ${p.port_number} ${p.connection_label ? '('+p.connection_label+')' : ''}`;
       if (p.id === targetPortId) option.selected = true;
       select.appendChild(option);
     });
@@ -256,7 +255,7 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       const statusSelect = document.getElementById('modal-status');
       
       if (devName && portNum) {
-        labelInput.value = \`\${devName} Port \${portNum}\`;
+        labelInput.value = `${devName} Port ${portNum}`;
         statusSelect.value = 'filled';
       }
     };
@@ -299,7 +298,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   try {
     const { DevicesAPI } = await import('./supabase.js');
     const currentDevice = await DevicesAPI.getById(deviceId);
-    const sourceLabel = \`\${currentDevice.name} Port \${portNumber}\`;
+    const sourceLabel = `${currentDevice.name} Port ${portNumber}`;
 
     let savedPort;
     if (portId) {
