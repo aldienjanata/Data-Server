@@ -761,3 +761,16 @@ code, pre {
 }
 
 .online-indicator.hidden { opacity: 0; transform: translateX(-50%) translateY(20px); }
+
+/* Login overrides */
+#app.is-login .app-sidebar,
+#app.is-login .app-header,
+#app.is-login .app-bottom-nav,
+#app.is-login header {
+  display: none !important;
+}
+#app.is-login .app-main {
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh;
+}

@@ -6,26 +6,23 @@ import { formatPort, vibrate } from './utils.js';
 import { showPortModal } from './app.js';
 
 // =====================================================
-// CISCO PORT LAYOUT DEFINITION
-// Cisco typically has ports in pairs on a rack
+// CISCO PORT LAYOUT (sesuai Excel: 2 baris fisik)
+// Baris atas: port ganjil (A), Baris bawah: port genap (B)
+// Kolom 1-4: PORT 1&2, 3&4, 5&6, 7&8
+// Kolom 5-13: PORT 31&32 ... 47&48
 // =====================================================
 const CISCO_LAYOUT = [
-  { label: 'Row 1 (Port 1-8)', ports: [1, 2, 3, 4, 5, 6, 7, 8] },
-  { label: 'Row 2 (Port 9-16)', ports: [9, 10, 11, 12, 13, 14, 15, 16] },
-  { label: 'Row 3 (Port 17-24)', ports: [17, 18, 19, 20, 21, 22, 23, 24] },
-  { label: 'Row 4 (Port 25-32)', ports: [25, 26, 27, 28, 29, 30, 31, 32] },
-  { label: 'Row 5 (Port 33-40)', ports: [33, 34, 35, 36, 37, 38, 39, 40] },
-  { label: 'Row 6 (Port 41-48)', ports: [41, 42, 43, 44, 45, 46, 47, 48] }
+  { label: 'Baris A (Atas)',  ports: [1, 3, 5, 7, 31, 33, 35, 37, 39, 41, 43, 45, 47] },
+  { label: 'Baris B (Bawah)', ports: [2, 4, 6, 8, 32, 34, 36, 38, 40, 42, 44, 46, 48] }
 ];
 
 // =====================================================
-// HUAWEI PORT LAYOUT
+// HUAWEI PORT LAYOUT (sesuai Excel: 2 baris)
+// 28 kolom x 2 baris (PORT 1&2 ... 55&56)
 // =====================================================
 const HUAWEI_LAYOUT = [
-  { label: 'Row 1 (Port 1-12)', ports: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] },
-  { label: 'Row 2 (Port 13-24)', ports: [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24] },
-  { label: 'Row 3 (Port 25-36)', ports: [25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36] },
-  { label: 'Row 4 (Port 37-48)', ports: [37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48] }
+  { label: 'Baris A (Atas)',  ports: Array.from({length:28}, (_,i) => i*2+1) },
+  { label: 'Baris B (Bawah)', ports: Array.from({length:28}, (_,i) => i*2+2) }
 ];
 
 // =====================================================
@@ -45,7 +42,23 @@ export async function renderPanelView(device, container) {
     const portMap = {};
     ports.forEach(p => { portMap[p.port_number] = p; });
 
-    const layout = isCisco ? CISCO_LAYOUT : isHuawei ? HUAWEI_LAYOUT : generateLayout(device.total_ports);
+    const layoutCols = parseInt(localStorage.getItem('layout_cols_' + device.id));
+    const layoutRows = parseInt(localStorage.getItem('layout_rows_' + device.id));
+    
+    let layout;
+    if (layoutCols && layoutRows) {
+      layout = [];
+      for (let r = 0; r < layoutRows; r++) {
+        const rowPorts = [];
+        for (let c = 0; c < layoutCols; c++) {
+          rowPorts.push(r * layoutCols + c + 1);
+        }
+        layout.push({ label: `Row ${r+1}`, ports: rowPorts });
+      }
+    } else {
+      layout = isCisco ? CISCO_LAYOUT : isHuawei ? HUAWEI_LAYOUT : generateLayout(device.total_ports || 48);
+    }
+    
     const deviceColor = isCisco ? 'var(--color-cisco)' : 'var(--color-huawei)';
     const deviceGlow  = isCisco ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)';
 
@@ -78,11 +91,10 @@ export async function renderPanelView(device, container) {
           "></div>
 
           <!-- Port Rows -->
-          ${layout.map(row => `
-            <div style="margin-bottom:10px;">
-              <div class="panel-row-label">${row.label}</div>
-              <div class="panel-row">
-                ${row.ports.map(portNum => {
+          <div style="overflow-x:auto; padding-bottom:12px;">
+            ${layout.map(row => `
+              <div style="display:flex; gap:8px;">
+                ${row.ports.filter(portNum => portNum <= ports.length || portNum <= device.total_ports).map(portNum => {
                   const port = portMap[portNum];
                   const status = port?.status || 'empty';
                   const label = port?.connection_label || '';
@@ -95,16 +107,18 @@ export async function renderPanelView(device, container) {
                          title="${label || ('Port ' + portNum)}${detail ? ' (' + detail + ')' : ''}"
                          id="panel-port-${device.id}-${portNum}"
                          data-port-num="${portNum}"
-                         data-status="${status}">
+                         data-status="${status}"
+                         data-label="${label.toLowerCase()}"
+                         style="flex-shrink:0;">
                       <div class="panel-port__connector"></div>
                       <div class="panel-port__num">${formatPort(portNum)}</div>
-                      ${label ? `<div class="panel-port__label">${shortLabel}</div>` : ''}
+                      ${label ? `<div class="panel-port__label" style="font-weight:600">${shortLabel}</div>` : ''}
                     </div>
                   `;
                 }).join('')}
               </div>
-            </div>
-          `).join('')}
+            `).join('')}
+          </div>
 
           <!-- Bottom LED -->
           <div style="
@@ -141,17 +155,10 @@ export async function renderPanelView(device, container) {
 // GENERATE GENERIC LAYOUT
 // =====================================================
 function generateLayout(totalPorts) {
-  const PORTS_PER_ROW = 12;
-  const rows = [];
-  for (let i = 0; i < totalPorts; i += PORTS_PER_ROW) {
-    const start = i + 1;
-    const end = Math.min(i + PORTS_PER_ROW, totalPorts);
-    rows.push({
-      label: `Row (Port ${start}-${end})`,
-      ports: Array.from({ length: end - start + 1 }, (_, j) => start + j)
-    });
-  }
-  return rows;
+  return [{
+    label: 'All Ports',
+    ports: Array.from({ length: totalPorts }, (_, j) => j + 1)
+  }];
 }
 
 // =====================================================
@@ -228,3 +235,110 @@ export function updatePanelPort(deviceId, portNumber, portData) {
     portEl.style.zIndex = '';
   }, 250);
 }
+
+// =====================================================
+// GTGO / OLT PANEL VIEW
+// Layout: 8 baris (port 1-8 ke bawah) x 16 kolom
+// Dimulai dari slot 3, format label: 1/slot/port
+// =====================================================
+export async function renderGTGOView(device, container) {
+  container.innerHTML = `<div class="skeleton" style="height:300px;border-radius:var(--radius-xl)"></div>`;
+
+  try {
+    const ports = await PortsAPI.getByDevice(device.id);
+    const portMap = {};
+    ports.forEach(p => {
+      const key = p.port_label || String(p.port_number);
+      portMap[key] = p;
+    });
+
+    // Layout: slot 3-18 (16 slots) x port 1-8 (8 ports)
+    const SLOTS = 16;
+    const PORTS_PER_SLOT = 8;
+    const START_SLOT = 3;
+    const deviceColor = 'var(--color-primary)';
+
+    let html = `
+      <div class="device-panel fade-in">
+        <div class="device-panel__rack" style="border-color:${deviceColor}33;overflow-x:auto;padding:var(--space-5)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div style="font-family:var(--font-mono);font-size:0.65rem;color:${deviceColor};font-weight:700;letter-spacing:0.1em">${device.name} — GTGO/OLT</div>
+            <div style="font-size:0.6rem;color:var(--color-text-muted);font-family:var(--font-mono)">${ports.filter(p=>p.status==='filled').length}/${ports.length} PORT TERISI</div>
+          </div>
+          <div style="height:3px;background:linear-gradient(90deg,transparent,${deviceColor},transparent);border-radius:var(--radius-full);margin-bottom:16px;opacity:0.6"></div>
+          
+          <div style="display:grid;grid-template-columns:40px repeat(${SLOTS},1fr);gap:4px;min-width:${SLOTS*52+48}px">
+            <!-- Header row -->
+            <div></div>
+            ${Array.from({length:SLOTS},(_,i)=>`
+              <div style="text-align:center;font-size:0.6rem;font-family:var(--font-mono);color:${deviceColor};font-weight:700;padding:3px">Slot ${START_SLOT+i}</div>
+            `).join('')}
+    `;
+
+    // Each port row (1-8)
+    for (let port = 1; port <= PORTS_PER_SLOT; port++) {
+      html += `<div style="display:contents">`;
+      // Row label
+      html += `<div style="display:flex;align-items:center;justify-content:center;font-size:0.6rem;font-family:var(--font-mono);color:var(--color-text-muted);font-weight:700">P${port}</div>`;
+      
+      for (let slot = 0; slot < SLOTS; slot++) {
+        const label = `1/${START_SLOT + slot}/${port}`;
+        const p = portMap[label];
+        const status = p?.status || 'empty';
+        const conn = p?.connection_label || '';
+        const shortConn = conn.length > 9 ? conn.slice(0,8)+'…' : conn;
+        const isFilled = status === 'filled';
+        const portId = p?.id || '';
+        const portNum = p?.port_number || 0;
+
+        html += `
+          <div class="panel-port ${status}"
+               onclick="handlePanelPortClick('${device.id}','${portId}',${portNum})"
+               id="panel-port-${device.id}-${label.replace(/\//g,'-')}"
+               title="${label}${conn ? ' → '+conn : ''}"
+               data-status="${status}"
+               data-label="${conn.toLowerCase()}"
+               style="
+                 border-radius:5px;
+                 padding:4px 3px;
+                 min-height:40px;
+                 display:flex;flex-direction:column;
+                 align-items:center;justify-content:center;
+                 font-size:0.55rem;cursor:pointer;
+                 transition:transform 0.1s;
+                 background:${isFilled ? 'rgba(16,185,129,0.18)' : 'var(--color-bg-elevated)'};
+                 border:1.5px solid ${isFilled ? 'var(--color-filled)' : 'var(--color-border)'};
+               "
+               onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10'"
+               onmouseleave="this.style.transform='';this.style.zIndex='1'">
+            <div style="font-family:var(--font-mono);font-weight:800;color:${isFilled ? 'var(--color-filled)' : 'var(--color-text-primary)'}">${label}</div>
+            ${isFilled ? `<div style="margin-top:2px;text-align:center;color:var(--color-text-primary);word-break:break-word;line-height:1.2;font-weight:700">${shortConn}</div>` : ''}
+          </div>
+        `;
+      }
+      html += `</div>`;
+    }
+
+    html += `
+          </div>
+          <div style="height:2px;background:linear-gradient(90deg,transparent,${deviceColor},transparent);border-radius:var(--radius-full);margin-top:16px;opacity:0.4"></div>
+        </div>
+        <div style="padding:16px 20px;border-top:1px solid var(--color-border)">
+          <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+            ${renderPortLegend()}
+          </div>
+        </div>
+      </div>
+    `;
+
+    container.innerHTML = html;
+    window.handlePanelPortClick = async (deviceId, portId, portNumber) => {
+      const { showPortModal } = await import('./app.js');
+      showPortModal(deviceId, portId || null, portNumber, null, 'panel');
+    };
+
+  } catch(err) {
+    container.innerHTML = `<div style="padding:40px;color:var(--color-danger)">Gagal memuat GTGO: ${err.message}</div>`;
+  }
+}
+

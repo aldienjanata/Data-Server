@@ -518,7 +518,7 @@ function cancelImport() {
 // =====================================================
 // DOWNLOAD TEMPLATE
 // =====================================================
-async function downloadTemplate() {
+export async function downloadTemplate() {
   if (!window.XLSX) await loadXLSX();
 
   const wb = XLSX.utils.book_new();
@@ -606,7 +606,7 @@ async function downloadTemplate() {
 // =====================================================
 // EXPORT ALL DATA
 // =====================================================
-async function exportAllData() {
+export async function exportAllData() {
   if (!window.XLSX) await loadXLSX();
 
   addLog('⏳ Mengambil semua data dari database...');

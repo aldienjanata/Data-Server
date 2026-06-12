@@ -114,14 +114,12 @@ function renderSiteCard(site) {
   const color = getSiteColor(site.name);
   const emoji = getSiteEmoji(site.name);
 
+  const slug = site.code || site.name.replace(/\s+/g, '-').toLowerCase();
   return `
-    <div class="site-card" onclick="App.navigate('site', {siteId:'${site.id}'})"
+    <div class="site-card" onclick="App.navigate('site', {siteId:'${slug}'})"
          style="--site-color:${color}">
       <div class="site-card__header">
         <div>
-          <div class="site-card__avatar" style="background:${color}22;">
-            ${emoji}
-          </div>
           <div class="site-card__name">${site.name}</div>
           <div class="site-card__location">📍 ${site.location || 'Jawa Tengah'}</div>
         </div>

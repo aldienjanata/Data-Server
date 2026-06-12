@@ -89,12 +89,15 @@ const SitesAPI = {
     return data;
   },
 
-  async getById(id) {
-    const { data, error } = await supabase
-      .from('sites')
-      .select('*')
-      .eq('id', id)
-      .single();
+  async getById(idOrSlug) {
+    const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(idOrSlug);
+    let query = supabase.from('sites').select('*');
+    if (isUUID) {
+      query = query.eq('id', idOrSlug);
+    } else {
+      query = query.or(`code.ilike.${idOrSlug},name.ilike.${idOrSlug}`);
+    }
+    const { data, error } = await query.single();
     if (error) throw error;
     return data;
   },

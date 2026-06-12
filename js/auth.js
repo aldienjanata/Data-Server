@@ -287,12 +287,11 @@ export async function initAuth() {
 // PERMISSION CHECK
 // =====================================================
 export function canEdit() {
-  if (!currentProfile) return false;
-  return ['admin', 'editor'].includes(currentProfile.role);
+  return !isGuest();
 }
 
 export function isAdmin() {
-  return currentProfile?.role === 'admin';
+  return !isGuest();
 }
 
 export function isGuest() {

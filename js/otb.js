@@ -7,120 +7,176 @@ import { showToast, showPortModal } from './app.js';
 import { canEdit } from './auth.js';
 
 // =====================================================
-// RENDER OTB DEVICE VIEW
+// RENDER OTB DEVICE VIEW (Custom Grids)
 // =====================================================
+const FIBER_COLORS = [
+  { name: 'Biru',   hex: '#3b82f6', text: '#fff' }, // 1
+  { name: 'Oranye', hex: '#f97316', text: '#fff' }, // 2
+  { name: 'Hijau',  hex: '#10b981', text: '#fff' }, // 3
+  { name: 'Coklat', hex: '#8b4513', text: '#fff' }, // 4
+  { name: 'Abu',    hex: '#64748b', text: '#fff' }, // 5
+  { name: 'Putih',  hex: '#ffffff', text: '#000' }, // 6
+  { name: 'Merah',  hex: '#ef4444', text: '#fff' }, // 7
+  { name: 'Hitam',  hex: '#000000', text: '#fff' }, // 8
+  { name: 'Kuning', hex: '#eab308', text: '#000' }, // 9
+  { name: 'Ungu',   hex: '#a855f7', text: '#fff' }, // 10
+  { name: 'Pink',   hex: '#ec4899', text: '#fff' }, // 11
+  { name: 'Aqua',   hex: '#06b6d4', text: '#fff' }  // 12
+];
+
+function getCoreColorIndex(coreNumber) {
+  // coreNumber 1-based. Example: 1 = 0 (Biru), 12 = 11 (Aqua), 13 = 0 (Biru)
+  return (coreNumber - 1) % 12;
+}
+
+function getTubeColorIndex(coreNumber) {
+  // Tube changes every 12 cores
+  return Math.floor((coreNumber - 1) / 12) % 12;
+}
+
 export async function renderOTBView(device, container) {
   container.innerHTML = `
     <div class="otb-container stagger" id="otb-container">
-      ${Array.from({ length: 3 }).map(() => `
-        <div class="skeleton" style="height:120px;border-radius:var(--radius-xl)"></div>
-      `).join('')}
+      <div class="skeleton" style="height:200px;border-radius:var(--radius-xl)"></div>
     </div>
   `;
 
   try {
-    const [tubes, allPorts] = await Promise.all([
-      TubesAPI.getByDevice(device.id),
-      PortsAPI.getByDevice(device.id)
-    ]);
-
-    // Group ports by tube
-    const portsByTube = {};
-    allPorts.forEach(p => {
-      const tubeId = p.tube_id || 'no-tube';
-      if (!portsByTube[tubeId]) portsByTube[tubeId] = [];
-      portsByTube[tubeId].push(p);
-    });
-
+    const allPorts = await PortsAPI.getByDevice(device.id);
     const otbContainer = document.getElementById('otb-container');
-    otbContainer.innerHTML = '';
+    
+    // Determine layout
+    let cols = parseInt(localStorage.getItem('layout_cols_' + device.id));
+    let rowsCount = parseInt(localStorage.getItem('layout_rows_' + device.id));
+    
+    const is144Default = device.model?.includes('144') || device.name?.includes('144') || allPorts.length === 144;
+    if (!cols || !rowsCount) {
+      cols = is144Default ? 12 : 24;
+      rowsCount = is144Default ? 12 : 4;
+    }
+    
+    const totalPorts = Math.max(allPorts.length, cols * rowsCount);
 
-    if (!tubes.length) {
-      otbContainer.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-state__icon">📦</div>
-          <div class="empty-state__title">Tidak ada tube</div>
-          <div class="empty-state__desc">Tambahkan tube untuk OTB ini</div>
-        </div>
-      `;
-      return;
+    // Create a 2D array for the grid [rows][cols]
+    const grid = Array.from({ length: rowsCount }, () => Array(cols).fill(null));
+
+    // Fill the grid based on layout rules
+    for (let p = 1; p <= totalPorts; p++) {
+      let r, c;
+      let coreNumber;
+
+      if (is144Default && !localStorage.getItem('layout_cols_' + device.id)) {
+        // Default OTB 144 logic
+        r = Math.floor((p - 1) / cols);
+        c = (p - 1) % cols;
+        coreNumber = (11 - r) * 12 + c + 1;
+      } else {
+        // Generic logic: bottom-up left-to-right
+        r = Math.floor((p - 1) / cols);
+        c = (p - 1) % cols;
+        coreNumber = p;
+      }
+
+      const portData = allPorts.find(px => px.port_number === p) || {
+        device_id: device.id, port_number: p, status: 'empty'
+      };
+
+      const visualRow = (is144Default && !localStorage.getItem('layout_cols_' + device.id)) ? r : (rowsCount - 1 - r);
+      
+      if (visualRow >= 0 && visualRow < rowsCount && c < cols) {
+        grid[visualRow][c] = { portData, coreNumber };
+      }
     }
 
-    tubes.forEach((tube, idx) => {
-      const ports = (portsByTube[tube.id] || []).sort((a, b) => a.port_number - b.port_number);
-      const filled = ports.filter(p => p.status === 'filled').length;
-      const total = ports.length || tube.total_cores;
-      const percent = total > 0 ? Math.round(filled / total * 100) : 0;
+    // Render Grid
+    let html = `
+      <div class="card" style="overflow-x:auto;padding:var(--space-5)">
+        <div style="min-width:${cols * 40}px;display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:4px">
+    `;
 
-      const tubeEl = document.createElement('div');
-      tubeEl.className = 'otb-tube fade-in';
-      tubeEl.style.animationDelay = `${idx * 0.06}s`;
-      tubeEl.innerHTML = `
-        <div class="otb-tube__header" onclick="toggleTube(this)">
-          <div class="otb-tube__number">${tube.tube_number}</div>
-          <div class="otb-tube__title">Tube ${tube.tube_number}</div>
-          <div class="tube-progress">
-            <div class="tube-progress__fill" style="width:${percent}%"></div>
+    for (let r = 0; r < rowsCount; r++) {
+      for (let c = 0; c < cols; c++) {
+        const cell = grid[r][c];
+        if (!cell) { html += `<div></div>`; continue; }
+
+        const p = cell.portData;
+        const cn = cell.coreNumber;
+        
+        const coreColor = FIBER_COLORS[getCoreColorIndex(cn)];
+        const tubeColor = FIBER_COLORS[getTubeColorIndex(cn)];
+
+        const isFilled = p.status === 'filled';
+        const opacity = isFilled ? '1' : '0.4';
+        
+        const label = p.connection_label || '';
+        const shortLabel = label.length > 5 ? label.slice(0, 5) : label;
+
+        html += `
+          <div class="otb-grid-cell" 
+               onclick="handlePortClick('${device.id}', '${p.id || ''}', ${p.port_number})"
+               id="port-cell-${p.id || p.port_number}"
+               title="Port: ${p.port_number}\nCore: ${cn} (${tubeColor.name}/${coreColor.name})\n${label || 'Kosong'}"
+               data-status="${p.status || 'empty'}"
+               data-label="${label.toLowerCase()}"
+               style="
+                 aspect-ratio:1;
+                 border: 2px solid ${tubeColor.hex};
+                 background: ${isFilled ? coreColor.hex : 'transparent'};
+                 color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
+                 border-radius: 4px;
+                 display: flex;
+                 flex-direction: column;
+                 align-items: center;
+                 justify-content: center;
+                 font-size: 0.7rem;
+                 font-weight: 800;
+                 cursor: pointer;
+                 transition: transform 0.1s;
+                 opacity: ${opacity};
+                 position: relative;
+                 overflow: hidden;
+                 text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 2px rgba(0,0,0,0.6)' : 'none'};
+               "
+               onmouseenter="this.style.transform='scale(1.15)';this.style.zIndex='10'"
+               onmouseleave="this.style.transform='scale(1)';this.style.zIndex='1'">
+            
+            ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
+            
+            <span>${p.port_number}</span>
+            ${isFilled ? `<span style="font-size:0.55rem;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center">${shortLabel}</span>` : ''}
           </div>
-          <div class="otb-tube__stats">
-            <span class="otb-tube__stat otb-tube__stat--filled">${filled} terisi</span>
-            <span class="otb-tube__stat otb-tube__stat--total">${total} core</span>
-          </div>
-          <span class="otb-tube__chevron">▼</span>
+        `;
+      }
+    }
+
+    html += `
         </div>
-        <div class="otb-tube__cores">
-          ${renderOTBCores(ports, tube, device)}
+        
+        <!-- Legend -->
+        <div style="margin-top:var(--space-6);padding-top:var(--space-4);border-top:1px solid var(--color-border);display:flex;gap:var(--space-4);flex-wrap:wrap;font-size:0.75rem">
+          <div style="width:100%;font-weight:700;margin-bottom:8px">Urutan Warna Fiber (Tube/Core)</div>
+          ${FIBER_COLORS.map((c, i) => `
+            <div style="display:flex;align-items:center;gap:6px">
+              <div style="width:12px;height:12px;background:${c.hex};border-radius:2px;border:1px solid rgba(255,255,255,0.2)"></div>
+              <span>${i+1}. ${c.name}</span>
+            </div>
+          `).join('')}
         </div>
-      `;
-      otbContainer.appendChild(tubeEl);
-    });
+      </div>
+    `;
+
+    otbContainer.innerHTML = html;
 
   } catch (err) {
-    console.error('[OTB] Error loading tubes:', err);
+    console.error('[OTB] Error:', err);
     container.innerHTML = `
       <div class="empty-state">
         <div class="empty-state__icon">⚠️</div>
-        <div class="empty-state__title">Gagal memuat data</div>
+        <div class="empty-state__title">Gagal memuat OTB Grid</div>
         <div class="empty-state__desc">${err.message}</div>
       </div>
     `;
   }
-}
-
-// =====================================================
-// RENDER OTB CORE CELLS
-// =====================================================
-function renderOTBCores(ports, tube, device) {
-  if (!ports.length) {
-    // Generate empty slots
-    return Array.from({ length: tube.total_cores }, (_, i) => `
-      <div class="port-cell empty" 
-           onclick="handlePortClick('${device.id}', null, ${i + 1}, '${tube.id}')"
-           id="port-${tube.id}-${i + 1}">
-        <div class="port-cell__number">C${formatPort(i + 1)}</div>
-        <div class="port-cell__dot"></div>
-      </div>
-    `).join('');
-  }
-
-  return ports.map(port => {
-    const label = port.connection_label || '';
-    const shortLabel = label.length > 12 ? label.slice(0, 10) + '…' : label;
-    const coreLabel = port.core_number ? `C${formatPort(port.core_number)}` : `C${formatPort(port.port_number)}`;
-
-    return `
-      <div class="port-cell ${port.status}" 
-           onclick="handlePortClick('${device.id}', '${port.id}', ${port.port_number}, '${port.tube_id || ''}')"
-           id="port-cell-${port.id}"
-           title="${label || 'Kosong'}"
-           data-port-id="${port.id}"
-           data-status="${port.status}">
-        <div class="port-cell__number">${coreLabel}</div>
-        <div class="port-cell__dot"></div>
-        ${label ? `<div class="port-cell__label">${shortLabel}</div>` : ''}
-      </div>
-    `;
-  }).join('');
 }
 
 // =====================================================
@@ -135,63 +191,27 @@ window.toggleTube = function(headerEl) {
 // =====================================================
 // HANDLE PORT CLICK
 // =====================================================
-window.handlePortClick = function(deviceId, portId, portNumber, tubeId) {
+window.handlePortClick = function(deviceId, portId, portNumber) {
   vibrate([8]);
-  showPortModal(deviceId, portId, portNumber, tubeId, 'otb');
+  showPortModal(deviceId, portId, portNumber, null, 'otb');
 };
 
 // =====================================================
 // UPDATE PORT CELL IN DOM (after save)
 // =====================================================
 export function updatePortCell(portId, portData) {
-  const cell = document.getElementById(`port-cell-${portId}`);
-  if (!cell) return;
-
-  cell.className = `port-cell ${portData.status}`;
-  cell.setAttribute('data-status', portData.status);
-
-  const label = portData.connection_label || '';
-  const shortLabel = label.length > 12 ? label.slice(0, 10) + '…' : label;
-
-  // Update label
-  let labelEl = cell.querySelector('.port-cell__label');
-  if (label) {
-    if (!labelEl) {
-      labelEl = document.createElement('div');
-      labelEl.className = 'port-cell__label';
-      cell.appendChild(labelEl);
-    }
-    labelEl.textContent = shortLabel;
-  } else {
-    labelEl?.remove();
+  // Since we changed the ID scheme, the easiest way to update the grid is to reload it.
+  // The port data contains device_id.
+  if (portData.device_id) {
+    window.location.reload();
   }
-
-  // Flash animation
-  cell.style.transform = 'scale(1.15)';
-  cell.style.zIndex = '10';
-  setTimeout(() => {
-    cell.style.transform = '';
-    cell.style.zIndex = '';
-  }, 250);
 }
 
 // =====================================================
 // RENDER TUBE STATS SUMMARY
 // =====================================================
-export function renderTubeStats(tubes, portsByTube) {
-  return tubes.map(tube => {
-    const ports = portsByTube[tube.id] || [];
-    const filled = ports.filter(p => p.status === 'filled').length;
-    const total = ports.length || tube.total_cores;
-    const percent = total > 0 ? Math.round(filled / total * 100) : 0;
-
-    return {
-      tubeNumber: tube.tube_number,
-      filled,
-      total,
-      percent
-    };
-  });
+export function renderTubeStats() {
+  return []; // Replaced by global device stats
 }
 
 // =====================================================
@@ -199,26 +219,18 @@ export function renderTubeStats(tubes, portsByTube) {
 // =====================================================
 export async function exportOTBData(device) {
   try {
-    const [tubes, ports] = await Promise.all([
-      TubesAPI.getByDevice(device.id),
-      PortsAPI.getByDevice(device.id)
-    ]);
+    const ports = await PortsAPI.getByDevice(device.id);
 
     const rows = [];
-    tubes.forEach(tube => {
-      const tubePorts = ports.filter(p => p.tube_id === tube.id).sort((a, b) => a.port_number - b.port_number);
-      tubePorts.forEach(port => {
-        rows.push({
-          'Perangkat': device.name,
-          'Tube': tube.tube_number,
-          'Core': port.core_number || port.port_number,
-          'Port No': port.port_number,
-          'Koneksi': port.connection_label || '',
-          'Detail': port.connection_detail || '',
-          'Status': getStatusLabel(port.status),
-          'Catatan': port.notes || '',
-          'Update': port.updated_at || ''
-        });
+    ports.forEach(port => {
+      rows.push({
+        'Perangkat': device.name,
+        'Port No': port.port_number,
+        'Koneksi': port.connection_label || '',
+        'Detail': port.connection_detail || '',
+        'Status': getStatusLabel(port.status),
+        'Catatan': port.notes || '',
+        'Update': port.updated_at || ''
       });
     });
 

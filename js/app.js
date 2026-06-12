@@ -51,20 +51,28 @@ export function showToast(message, type = 'info', duration = 3500) {
 // PORT MODAL - Edit port connection
 // =====================================================
 export async function showPortModal(deviceId, portId, portNumber, tubeId, displayType = 'otb') {
-  // Get port data
+  // Get port data and device data
   let portData = null;
-  if (portId) {
-    try {
+  let deviceData = null;
+  try {
+    const { DevicesAPI } = await import('./supabase.js');
+    deviceData = await DevicesAPI.getById(deviceId);
+    
+    if (portId) {
       const ports = await PortsAPI.getByDevice(deviceId);
       portData = ports.find(p => p.id === portId);
-    } catch {}
-  }
+    }
+  } catch {}
 
   const isEditable = canEdit();
   const label = portData?.connection_label || '';
   const detail = portData?.connection_detail || '';
   const status = portData?.status || 'empty';
   const notes  = portData?.notes || '';
+  
+  // Try to parse existing target port if any (we store it in connection_target_port for sync purposes if needed, but we can also just let the user re-link)
+  const targetDevId = portData?.connection_target_device || '';
+  const targetPortIdStr = portData?.connection_target_port || '';
 
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
@@ -109,11 +117,23 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
       ${isEditable ? `
         <div class="port-detail-body">
           <div class="form-group">
-            <label class="form-label">Label Koneksi / Tujuan</label>
+            <label class="form-label">Tautkan ke Perangkat & Port</label>
+            <div style="display:flex;gap:8px;">
+              <select class="form-select" id="modal-target-device" onchange="loadTargetPorts('${deviceData?.site_id}', this.value, '${targetPortIdStr}')" style="flex:1">
+                <option value="">-- Pilih Perangkat Tujuan --</option>
+              </select>
+              <select class="form-select" id="modal-target-port" style="flex:1" disabled>
+                <option value="">-- Pilih Port --</option>
+              </select>
+            </div>
+            <div class="form-hint" style="color:var(--color-primary-light)">Memilih port tujuan akan mengupdate kedua port agar sinkron (dua arah).</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Label Manual (Opsional)</label>
             <input class="form-input" type="text" id="modal-label"
-                   value="${label}" placeholder="cth: Karangtengah 1/3/2 atau CWDM-KBM-1470"
+                   value="${label}" placeholder="Kosongkan jika memilih port tujuan di atas"
                    autocomplete="off">
-            <div class="form-hint">Nama lokasi atau label yang terhubung ke port ini</div>
           </div>
 
           <div class="form-group">
@@ -171,12 +191,78 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
   `;
 
   document.body.appendChild(backdrop);
+  
+  if (isEditable && deviceData) {
+    loadTargetDevices(deviceData.site_id, deviceId, targetDevId, targetPortIdStr);
+  }
+}
 
-  // Focus first input
-  setTimeout(() => {
-    const firstInput = backdrop.querySelector('.form-input');
-    if (firstInput) firstInput.focus();
-  }, 300);
+// Helper to load devices for sync
+async function loadTargetDevices(siteId, currentDeviceId, targetDevId, targetPortId) {
+  try {
+    const { DevicesAPI } = await import('./supabase.js');
+    const devices = await DevicesAPI.getBySite(siteId);
+    const select = document.getElementById('modal-target-device');
+    if (!select) return;
+    
+    devices.forEach(d => {
+      if (d.id === currentDeviceId) return; // Don't link to self
+      const option = document.createElement('option');
+      option.value = d.id;
+      option.textContent = d.name;
+      if (d.id === targetDevId) option.selected = true;
+      select.appendChild(option);
+    });
+    
+    if (targetDevId) {
+      await loadTargetPorts(siteId, targetDevId, targetPortId);
+    }
+  } catch (err) {
+    console.error('Failed to load target devices', err);
+  }
+}
+
+window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') {
+  const select = document.getElementById('modal-target-port');
+  if (!select) return;
+  select.innerHTML = '<option value="">-- Pilih Port --</option>';
+  select.disabled = true;
+  
+  if (!targetDevId) return;
+  
+  try {
+    const { PortsAPI } = await import('./supabase.js');
+    const ports = await PortsAPI.getByDevice(targetDevId);
+    ports.forEach(p => {
+      const option = document.createElement('option');
+      option.value = p.id;
+      // Also store port number as data attribute to build the label later
+      option.dataset.port = p.port_number;
+      // Show if it's filled
+      const statusIcon = p.status === 'filled' ? '🔴' : '🟢';
+      option.textContent = \`\${statusIcon} Port \${p.port_number} \${p.connection_label ? '('+p.connection_label+')' : ''}\`;
+      if (p.id === targetPortId) option.selected = true;
+      select.appendChild(option);
+    });
+    select.disabled = false;
+    
+    // Auto-fill label when a port is selected
+    select.onchange = (e) => {
+      const devSelect = document.getElementById('modal-target-device');
+      const devName = devSelect.options[devSelect.selectedIndex]?.text;
+      const portNum = e.target.options[e.target.selectedIndex]?.dataset.port;
+      
+      const labelInput = document.getElementById('modal-label');
+      const statusSelect = document.getElementById('modal-status');
+      
+      if (devName && portNum) {
+        labelInput.value = \`\${devName} Port \${portNum}\`;
+        statusSelect.value = 'filled';
+      }
+    };
+  } catch (err) {
+    console.error('Failed to load target ports', err);
+  }
 }
 
 function getStatusLabel(status) {
@@ -192,10 +278,15 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   const detail = document.getElementById('modal-detail').value.trim();
   const status = document.getElementById('modal-status').value;
   const notes  = document.getElementById('modal-notes').value.trim();
+  
+  const targetDevId = document.getElementById('modal-target-device')?.value;
+  const targetPortId = document.getElementById('modal-target-port')?.value;
 
   const updates = {
     connection_label:  label  || null,
     connection_detail: detail || null,
+    connection_target_device: targetDevId || null,
+    connection_target_port: targetPortId || null,
     status,
     notes: notes || null,
     updated_by: currentUser?.email || 'anonymous',
@@ -206,6 +297,10 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   if (btn) { btn.classList.add('loading'); btn.disabled = true; }
 
   try {
+    const { DevicesAPI } = await import('./supabase.js');
+    const currentDevice = await DevicesAPI.getById(deviceId);
+    const sourceLabel = \`\${currentDevice.name} Port \${portNumber}\`;
+
     let savedPort;
     if (portId) {
       savedPort = await PortsAPI.update(portId, updates);
@@ -216,6 +311,17 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
         tube_id: tubeId || null,
         port_number: portNumber,
         ...updates
+      });
+    }
+    
+    // Handle Two-way sync
+    if (targetPortId && targetDevId) {
+      await PortsAPI.update(targetPortId, {
+        connection_label: sourceLabel,
+        connection_target_device: deviceId,
+        connection_target_port: savedPort.id,
+        status: status === 'empty' ? 'empty' : 'filled', // Keep synced status
+        updated_by: currentUser?.email || 'anonymous'
       });
     }
 
@@ -278,7 +384,7 @@ const Router = {
     'search':   renderSearchRoute,
     'settings': renderSettingsRoute,
     'audit':    renderAuditRoute,
-    'import':   renderImportRoute
+    'list-data': renderListDataRoute
   },
 
   navigate(page, params = {}) {
@@ -288,9 +394,13 @@ const Router = {
     if (params.deviceId) AppState.currentDeviceId = params.deviceId;
 
     // Update hash
-    const hash = params.siteId
-      ? `#/${page}/${params.siteId}${params.deviceId ? '/' + params.deviceId : ''}`
-      : `#/${page}`;
+    let hash = `#/${page}`;
+    if (page === 'site' && params.siteId) {
+      hash += `/${params.siteId}`;
+    } else if (page === 'device' && params.deviceId) {
+      hash += `/${params.deviceId}`;
+    }
+    
     history.pushState({ page, params }, '', hash);
 
     // Render page
@@ -314,8 +424,11 @@ const Router = {
     const parts = hash.split('/');
     const page = parts[0] || 'dashboard';
     const params = {};
-    if (parts[1]) params.siteId = parts[1];
-    if (parts[2]) params.deviceId = parts[2];
+    if (page === 'site') {
+      params.siteId = parts[1];
+    } else if (page === 'device') {
+      params.deviceId = parts[1];
+    }
     this.render(page, params);
     updateBottomNav(page);
   }
@@ -327,15 +440,17 @@ const Router = {
 let _cleanupLoginAnim = null;
 async function renderLoginRoute() {
   if (_cleanupLoginAnim) { _cleanupLoginAnim(); _cleanupLoginAnim = null; }
+  // Hide sidebar/header for login screen
+  document.getElementById('app')?.classList.add('is-login');
   setPageContent(renderLoginPage());
   hideBottomNav();
-  // Start canvas animation after DOM is ready
   requestAnimationFrame(() => {
     _cleanupLoginAnim = initLoginAnimation();
   });
 }
 
 async function renderDashboardRoute() {
+  document.getElementById('app')?.classList.remove('is-login');
   showBottomNav();
   setPageContent('<div class="page-content"><div class="skeleton" style="height:400px;border-radius:var(--radius-xl)"></div></div>');
   await renderDashboard(document.querySelector('.page-content'));
@@ -354,11 +469,7 @@ async function renderDeviceRoute(params) {
   await renderDevicePage(params.deviceId, params.siteId, document.querySelector('.page-content'));
 }
 
-async function renderSearchRoute() {
-  showBottomNav();
-  setPageContent('<div class="page-content"></div>');
-  await renderSearchPage(document.querySelector('.page-content'));
-}
+// Search route removed
 
 async function renderSettingsRoute() {
   showBottomNav();
@@ -367,11 +478,11 @@ async function renderSettingsRoute() {
   await renderSettings(document.querySelector('.page-content'));
 }
 
-async function renderImportRoute() {
+async function renderListDataRoute() {
   showBottomNav();
   setPageContent('<div class="page-content"></div>');
-  const { renderImportPage } = await import('./import.js');
-  await renderImportPage(document.querySelector('.page-content'));
+  const { renderListDataPage } = await import('./list-data.js');
+  await renderListDataPage(document.querySelector('.page-content'));
 }
 
 async function renderAuditRoute() {
@@ -509,8 +620,6 @@ function renderHeader(siteName = '') {
         </div>
       ` : ''}
       <div class="app-header__actions">
-        <button class="btn btn-ghost btn-icon" onclick="App.navigate('search')" 
-                title="Cari Port" id="search-btn">🔍</button>
         <button class="btn btn-ghost btn-icon" onclick="toggleTheme()" 
                 id="theme-btn" title="Ganti Tema">🌙</button>
       </div>
@@ -585,12 +694,10 @@ async function initApp() {
         <button class="app-sidebar__item active" data-page="dashboard" onclick="App.navigate('dashboard')">
           <span class="app-sidebar__item-icon">🏠</span> Dashboard
         </button>
-        <button class="app-sidebar__item" data-page="search" onclick="App.navigate('search')">
-          <span class="app-sidebar__item-icon">🔍</span> Cari Port
+        <button class="app-sidebar__item" data-page="list-data" onclick="App.navigate('list-data')">
+          <span class="app-sidebar__item-icon">📋</span> Data Port Perangkat
         </button>
-        <button class="app-sidebar__item" data-page="import" onclick="App.navigate('import')">
-          <span class="app-sidebar__item-icon">📥</span> Import Data
-        </button>
+
         <button class="app-sidebar__item" data-page="audit" onclick="App.navigate('audit')">
           <span class="app-sidebar__item-icon">📋</span> Riwayat
         </button>
@@ -614,14 +721,11 @@ async function initApp() {
         <span class="bottom-nav__icon">🏠</span>
         <span class="bottom-nav__label">Dashboard</span>
       </button>
-      <button class="bottom-nav__item" data-page="search" onclick="App.navigate('search')">
-        <span class="bottom-nav__icon">🔍</span>
-        <span class="bottom-nav__label">Cari</span>
+      <button class="bottom-nav__item" data-page="list-data" onclick="App.navigate('list-data')">
+        <span class="bottom-nav__icon">📋</span>
+        <span class="bottom-nav__label">Data Port</span>
       </button>
-      <button class="bottom-nav__item" data-page="import" onclick="App.navigate('import')">
-        <span class="bottom-nav__icon">📥</span>
-        <span class="bottom-nav__label">Import</span>
-      </button>
+
       <button class="bottom-nav__item" data-page="audit" onclick="App.navigate('audit')">
         <span class="bottom-nav__icon">📋</span>
         <span class="bottom-nav__label">Riwayat</span>

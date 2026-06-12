@@ -10,10 +10,11 @@ export async function renderSitePage(siteId, container) {
   if (!siteId) { window.App.navigate('dashboard'); return; }
 
   try {
-    const [site, devices] = await Promise.all([
-      SitesAPI.getById(siteId),
-      DevicesAPI.getBySite(siteId)
-    ]);
+    const site = await SitesAPI.getById(siteId);
+    if (!site) throw new Error('Site tidak ditemukan');
+    const actualSiteId = site.id;
+
+    const devices = await DevicesAPI.getBySite(actualSiteId);
 
     const siteColor = getSiteColor(site.name);
     const siteEmoji = getSiteEmoji(site.name);
@@ -38,9 +39,8 @@ export async function renderSitePage(siteId, container) {
         </div>
 
         <!-- Site Header -->
-        <div class="site-detail-header" style="background:${siteColor}15;border:1px solid ${siteColor}33">
-          <div class="site-detail-bg">${siteEmoji}</div>
-          <div class="site-detail-content">
+        <div class="site-detail-header" style="background:${siteColor}15;border:1px solid ${siteColor}33;padding:var(--space-4);border-radius:var(--radius-xl);margin-bottom:var(--space-5);">
+          <div class="site-detail-content" style="width:100%">
             <div style="display:flex;justify-content:space-between;align-items:flex-start">
               <div>
                 <div class="site-detail-name">${site.name}</div>
@@ -78,7 +78,7 @@ export async function renderSitePage(siteId, container) {
             Perangkat di ${site.name}
           </div>
           ${canEdit() ? `
-            <button class="btn btn-primary btn-sm" onclick="showAddDeviceModal('${siteId}')">
+            <button class="btn btn-primary btn-sm" onclick="showAddDeviceModal('${actualSiteId}', '${siteId}')">
               + Perangkat
             </button>
           ` : ''}
@@ -90,7 +90,7 @@ export async function renderSitePage(siteId, container) {
               <div class="empty-state__icon">🖥️</div>
               <div class="empty-state__title">Belum ada perangkat</div>
               <div class="empty-state__desc">Tambahkan perangkat untuk site ini</div>
-              ${canEdit() ? `<button class="btn btn-primary" onclick="showAddDeviceModal('${siteId}')">+ Tambah Perangkat</button>` : ''}
+              ${canEdit() ? `<button class="btn btn-primary" onclick="showAddDeviceModal('${actualSiteId}', '${siteId}')">+ Tambah Perangkat</button>` : ''}
             </div>
           ` : devices.map(device => renderDeviceListItem(device, siteId)).join('')}
         </div>
@@ -155,7 +155,7 @@ function renderDeviceListItem(device, siteId) {
 // =====================================================
 // ADD DEVICE MODAL
 // =====================================================
-window.showAddDeviceModal = async function(siteId) {
+window.showAddDeviceModal = async function(dbSiteId, slugSiteId) {
   const { DeviceTypesAPI } = await import('./supabase.js');
   const types = await DeviceTypesAPI.getAll();
 
@@ -194,7 +194,7 @@ window.showAddDeviceModal = async function(siteId) {
       </div>
       <div class="modal__actions">
         <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-backdrop').remove()">Batal</button>
-        <button class="btn btn-primary" style="flex:2" onclick="submitAddDevice('${siteId}')">➕ Tambah</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitAddDevice('${dbSiteId}', '${slugSiteId}')">➕ Tambah</button>
       </div>
     </div>
   `;
@@ -202,7 +202,7 @@ window.showAddDeviceModal = async function(siteId) {
   setTimeout(() => document.getElementById('new-dev-name')?.focus(), 300);
 };
 
-window.submitAddDevice = async function(siteId) {
+window.submitAddDevice = async function(dbSiteId, slugSiteId) {
   const name       = document.getElementById('new-dev-name').value.trim();
   const typeId     = document.getElementById('new-dev-type').value;
   const model      = document.getElementById('new-dev-model').value.trim();
@@ -216,7 +216,7 @@ window.submitAddDevice = async function(siteId) {
 
   try {
     const device = await DevicesAPI.create({
-      site_id: siteId,
+      site_id: dbSiteId,
       device_type_id: typeId,
       name, model: model || null,
       total_ports: totalPorts,
@@ -235,7 +235,7 @@ window.submitAddDevice = async function(siteId) {
 
     document.querySelector('.modal-backdrop').remove();
     showToast(`✅ Perangkat ${name} berhasil ditambahkan!`, 'success');
-    window.App.navigate('site', { siteId });
+    window.App.navigate('site', { siteId: slugSiteId });
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   } finally {

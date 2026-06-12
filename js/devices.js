@@ -6,7 +6,7 @@ import { getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent, getStatus
 import { canEdit, isAdmin } from './auth.js';
 import { showToast } from './app.js';
 import { renderOTBView, exportOTBData } from './otb.js';
-import { renderPanelView } from './panels.js';
+import { renderPanelView, renderGTGOView } from './panels.js';
 
 export async function renderDevicePage(deviceId, siteId, container) {
   if (!deviceId) { window.App.navigate('dashboard'); return; }
@@ -46,11 +46,21 @@ export async function renderDevicePage(deviceId, siteId, container) {
           </div>
           ${canEdit() ? `
             <div style="display:flex;flex-direction:column;gap:6px">
-              <button class="btn btn-ghost btn-icon-sm" onclick="showEditDeviceModal('${deviceId}','${device.name}','${device.model||''}','${device.rack_position||''}','${device.notes||''}')" title="Edit">✏️</button>
+              <button class="btn btn-ghost btn-icon-sm" onclick="showEditLayoutModal('${deviceId}', '${typeName}')" title="Edit Layout">⚙️</button>
+              <button class="btn btn-ghost btn-icon-sm" onclick="showEditDeviceModal('${deviceId}','${device.name}','${device.model||''}','${device.rack_position||''}','${device.notes||''}')" title="Edit Perangkat">✏️</button>
               ${isAdmin() ? `<button class="btn btn-ghost btn-icon-sm" style="color:var(--color-danger)" onclick="confirmDeleteDevice('${deviceId}','${device.site_id}')" title="Hapus">🗑️</button>` : ''}
             </div>
           ` : ''}
         </div>
+        
+        <!-- Import / Export Actions -->
+        ${canEdit() ? `
+        <div style="display:flex;gap:8px;margin-bottom:var(--space-4)">
+          <input type="file" id="device-import-file" accept=".xlsx,.xls" style="display:none" onchange="handleDeviceImportFile(event, '${deviceId}', '${device.site_id}', '${typeName}')">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('device-import-file').click()">📥 Import Port</button>
+          <button class="btn btn-ghost btn-sm" onclick="handleDownloadTemplate()">📋 Template Excel</button>
+        </div>
+        ` : ''}
 
         <!-- Stats Row -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-5)">
@@ -72,12 +82,18 @@ export async function renderDevicePage(deviceId, siteId, container) {
           </div>
         </div>
 
-        <!-- Port Filter Chips -->
-        <div class="chip-group" style="margin-bottom:var(--space-4)" id="port-filters">
-          <div class="chip active" onclick="filterPorts(this,'all')" data-filter="all">Semua</div>
-          <div class="chip" onclick="filterPorts(this,'filled')" data-filter="filled">🟢 Terisi</div>
-          <div class="chip" onclick="filterPorts(this,'empty')" data-filter="empty">⚪ Kosong</div>
-          <div class="chip" onclick="filterPorts(this,'unverified')" data-filter="unverified">🟡 Belum Verifikasi</div>
+        <!-- Port Filter Chips and Search -->
+        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:var(--space-4); align-items:center;">
+          <div class="search-wrapper" style="flex:1; min-width:200px;">
+            <span class="search-icon">🔍</span>
+            <input class="search-input" type="text" id="device-search" placeholder="Cari port/lokasi di perangkat ini..." autocomplete="off" oninput="filterDevicePorts()">
+          </div>
+          <div class="chip-group" id="port-filters" style="margin-bottom:0">
+            <div class="chip active" onclick="filterPorts(this,'all')" data-filter="all">Semua</div>
+            <div class="chip" onclick="filterPorts(this,'filled')" data-filter="filled">🟢 Terisi</div>
+            <div class="chip" onclick="filterPorts(this,'empty')" data-filter="empty">⚪ Kosong</div>
+            <div class="chip" onclick="filterPorts(this,'unverified')" data-filter="unverified">🟡 Belum Verifikasi</div>
+          </div>
         </div>
 
         <!-- Action Buttons -->
@@ -107,6 +123,8 @@ export async function renderDevicePage(deviceId, siteId, container) {
     const portView = document.getElementById('device-port-view');
     if (typeName === 'OTB') {
       await renderOTBView(device, portView);
+    } else if (typeName === 'GTGO' || typeName === 'OLT') {
+      await renderGTGOView(device, portView);
     } else {
       await renderPanelView(device, portView);
     }
@@ -133,11 +151,21 @@ export async function renderDevicePage(deviceId, siteId, container) {
 window.filterPorts = function(chipEl, filter) {
   document.querySelectorAll('#port-filters .chip').forEach(c => c.classList.remove('active'));
   chipEl.classList.add('active');
+  window.filterDevicePorts();
+};
 
-  // Show/hide port cells based on filter
-  document.querySelectorAll('.port-cell, .panel-port').forEach(cell => {
+window.filterDevicePorts = function() {
+  const query = document.getElementById('device-search')?.value.toLowerCase() || '';
+  const activeFilter = document.querySelector('#port-filters .chip.active')?.dataset.filter || 'all';
+  
+  document.querySelectorAll('.port-cell, .panel-port, .otb-grid-cell').forEach(cell => {
     const status = cell.getAttribute('data-status') || 'empty';
-    if (filter === 'all' || status === filter) {
+    const label = cell.getAttribute('data-label') || '';
+    
+    const matchStatus = activeFilter === 'all' || status === activeFilter;
+    const matchSearch = query === '' || label.includes(query) || cell.textContent.toLowerCase().includes(query);
+    
+    if (matchStatus && matchSearch) {
       cell.style.display = '';
       cell.style.opacity = '1';
     } else {
@@ -246,6 +274,85 @@ async function loadRecentAudit(deviceId) {
 // =====================================================
 // EDIT DEVICE MODAL
 // =====================================================
+window.showEditDeviceModal = function(deviceId, name, model, rack, notes) {};  // defined below
+window.confirmDeleteDevice = function(deviceId, siteId) {};  // defined below
+window.saveDevice = function() {};  // defined below
+
+// These are defined below; assigning here so inline HTML onclick can call them
+window.showEditLayoutModal = function(deviceId, typeName) { showEditLayoutModal(deviceId, typeName); };
+window.saveDeviceLayout = function(deviceId, btn) { saveDeviceLayout(deviceId, btn); };
+window.handleDeviceImportFile = function(event, deviceId, siteId, typeName) { handleDeviceImportFile(event, deviceId, siteId, typeName); };
+window.handleDownloadTemplate = async () => {
+  const imp = await import('./import.js');
+  if (imp.downloadTemplate) imp.downloadTemplate();
+};
+
+// =====================================================
+// EDIT LAYOUT MODAL
+// =====================================================
+function showEditLayoutModal(deviceId, typeName) {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  const currentCols = localStorage.getItem('layout_cols_' + deviceId) || (typeName === 'OTB' ? 24 : 48);
+  const currentRows = localStorage.getItem('layout_rows_' + deviceId) || (typeName === 'OTB' ? 4 : 2);
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">⚙️ Konfigurasi Layout Port</div>
+      <div class="form-group">
+        <label class="form-label">Jumlah Kolom (Horizontal)</label>
+        <input type="number" id="edit-layout-cols" class="form-input" value="${currentCols}" min="1" max="144">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Jumlah Baris (Vertikal)</label>
+        <input type="number" id="edit-layout-rows" class="form-input" value="${currentRows}" min="1" max="20">
+      </div>
+      <p style="font-size:0.8rem;color:var(--color-text-muted);margin-bottom:var(--space-4)">Mengubah layout hanya merubah tampilan visual. Data port di database tetap aman.</p>
+      <div class="modal__actions">
+        <button class="btn btn-secondary" style="flex:1" onclick="this.closest('.modal-backdrop').remove()">Batal</button>
+        <button class="btn btn-primary" style="flex:2" onclick="saveDeviceLayout('${deviceId}', this)">Simpan Layout</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+}
+
+function saveDeviceLayout(deviceId, btn) {
+  const cols = document.getElementById('edit-layout-cols').value;
+  const rows = document.getElementById('edit-layout-rows').value;
+  if (!cols || !rows || cols < 1 || rows < 1) {
+    showToast('Kolom dan baris harus lebih dari 0', 'warning');
+    return;
+  }
+  localStorage.setItem('layout_cols_' + deviceId, cols);
+  localStorage.setItem('layout_rows_' + deviceId, rows);
+  btn.closest('.modal-backdrop').remove();
+  showToast('Layout berhasil diperbarui', 'success');
+  location.reload();
+}
+
+// =====================================================
+// DEVICE IMPORT FILE HANDLER
+// =====================================================
+async function handleDeviceImportFile(event, deviceId, siteId, typeName) {
+  const file = event.target.files[0];
+  if (!file) return;
+  showToast('Memproses file import...', 'info');
+  try {
+    const imp = await import('./import.js');
+    if (imp.importPortsToDevice) {
+      await imp.importPortsToDevice(file, deviceId, siteId, typeName);
+    } else {
+      showToast('Fungsi importPortsToDevice belum tersedia di import.js', 'warning');
+    }
+    location.reload();
+  } catch (err) {
+    console.error(err);
+    showToast('Import gagal: ' + err.message, 'error');
+  }
+}
+
 window.showEditDeviceModal = function(deviceId, name, model, rack, notes) {
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
