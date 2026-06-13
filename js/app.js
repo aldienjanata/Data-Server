@@ -448,18 +448,14 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
       });
     }
 
-    // Update DOM
-    if (displayType === 'otb') {
-      const { updatePortCell } = await import('./otb.js');
-      updatePortCell(savedPort.id, savedPort);
-    } else if (displayType === 'panel') {
-      const { updatePanelPort } = await import('./panels.js');
-      updatePanelPort(deviceId, portNumber, savedPort);
-    }
-
     document.querySelector('.modal-backdrop')?.remove();
     vibrate([10, 5, 10]);
-    showToast('✅ Port berhasil disimpan', 'success');
+    showToast('✅ Port berhasil disimpan, menyegarkan data...', 'success');
+    
+    // Auto refresh to ensure all data and stats are synced
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
 
   } catch (err) {
     console.error('[App] Save port error:', err);
