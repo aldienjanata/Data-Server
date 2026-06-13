@@ -86,15 +86,18 @@ export async function renderOTBView(device, container) {
       }
     }
 
-    // Dynamic cell sizing: enforce minimum 80px per cell so squares are large enough for text
-    const cellMinPx = 80;
-    const fontSizeNum = cols >= 20 ? '0.8' : cols >= 12 ? '0.75' : '0.7';
-    const labelFontSize = cols >= 20 ? '0.6' : cols >= 12 ? '0.55' : '0.5';
+    // OTB 144 (12 cols): responsive 1fr columns so grid fills container width without scroll
+    // OTB 96 (24 cols): fixed 80px columns so cells are large enough, with horizontal scroll
+    const cellMinPx = cols <= 12 ? null : 80; // null = use 1fr
+    const fontSizeNum = cols >= 20 ? '0.8' : '0.72';
+    const labelFontSize = cols >= 20 ? '0.6' : '0.52';
+    const gridCols = cellMinPx ? `repeat(${cols}, ${cellMinPx}px)` : `repeat(${cols}, 1fr)`;
+    const gridMinWidth = cellMinPx ? `${cols * cellMinPx}px` : '100%';
 
     // Render Grid
     let html = `
       <div class="card" style="overflow-x:auto;padding:var(--space-5)">
-        <div style="min-width:${cols * cellMinPx}px;display:grid;grid-template-columns:repeat(${cols}, ${cellMinPx}px);gap:5px">
+        <div style="min-width:${gridMinWidth};display:grid;grid-template-columns:${gridCols};gap:5px;align-items:start">
     `;
 
     for (let r = 0; r < rowsCount; r++) {
@@ -127,8 +130,7 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  width: ${cellMinPx}px;
-                  height: ${cellMinPx}px;
+                  ${cellMinPx ? `width:${cellMinPx}px;height:${cellMinPx}px;` : 'aspect-ratio:1/1;'}
                   box-sizing: border-box;
                   overflow: hidden;
                   border: 2px solid ${tubeColor.hex};
