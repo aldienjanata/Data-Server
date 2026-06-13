@@ -303,6 +303,8 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       // Also store port number as data attribute to build the label later
       option.dataset.port = p.port_number;
       option.dataset.portLabel = p.port_label || '';
+      option.dataset.detail = p.connection_detail || '';
+      option.dataset.notes = p.notes || '';
       // Show if it's filled
       const statusIcon = p.status === 'filled' ? '🔴' : '🟢';
       const labelStr = p.port_label ? p.port_label : `Port ${p.port_number}`;
@@ -313,15 +315,43 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
     });
     select.disabled = false;
     
+    // If there's a pre-selected port, auto-fill the detail from it
+    if (targetPortId && select.value) {
+      const selectedOpt = select.options[select.selectedIndex];
+      if (selectedOpt) {
+        const detailInput = document.getElementById('modal-detail');
+        // Only auto-fill if the field is currently empty
+        if (detailInput && !detailInput.value.trim() && selectedOpt.dataset.detail) {
+          detailInput.value = selectedOpt.dataset.detail;
+        }
+        const notesInput = document.getElementById('modal-notes');
+        if (notesInput && !notesInput.value.trim() && selectedOpt.dataset.notes) {
+          notesInput.value = selectedOpt.dataset.notes;
+        }
+      }
+    }
+    
     // Auto-fill label when a port is selected
     select.onchange = (e) => {
       const devSelect = document.getElementById('modal-target-device');
       const devName = devSelect.options[devSelect.selectedIndex]?.text;
       const portNum = e.target.options[e.target.selectedIndex]?.dataset.port;
+      const portDetail = e.target.options[e.target.selectedIndex]?.dataset.detail || '';
+      const portNotes = e.target.options[e.target.selectedIndex]?.dataset.notes || '';
       
       if (devName && portNum) {
         const statusSelect = document.getElementById('modal-status');
         if (statusSelect) statusSelect.value = 'filled';
+        
+        // Auto-fill Keterangan Tujuan Port from the selected port's connection_detail
+        const detailInput = document.getElementById('modal-detail');
+        if (detailInput && !detailInput.value.trim() && portDetail) {
+          detailInput.value = portDetail;
+        }
+        const notesInput = document.getElementById('modal-notes');
+        if (notesInput && !notesInput.value.trim() && portNotes) {
+          notesInput.value = portNotes;
+        }
       }
     };
   } catch (err) {
