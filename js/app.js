@@ -56,7 +56,14 @@ window.goToDevice = async function(deviceId) {
     if (dev && dev.site_id) {
       document.querySelector('.modal-backdrop')?.remove();
       setTimeout(() => {
-        Router.navigate('device', { siteId: dev.site_id, deviceId: dev.id, deviceName: dev.name });
+        // Use the global navigation helper set up by the router after init
+        if (typeof window._navigateTo === 'function') {
+          window._navigateTo('device', { siteId: dev.site_id, deviceId: dev.id, deviceName: dev.name });
+        } else {
+          // Fallback: change hash directly
+          const slug = dev.name.replace(/\s+/g, '-');
+          window.location.hash = `#/device/${dev.site_id}/${slug}`;
+        }
       }, 100);
     }
   } catch (err) {
@@ -961,4 +968,8 @@ window.App = {
 // =====================================================
 // START
 // =====================================================
-document.addEventListener('DOMContentLoaded', initApp);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
