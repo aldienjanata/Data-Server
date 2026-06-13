@@ -1,8 +1,8 @@
 // =====================================================
 // DASHBOARD.JS
 // =====================================================
-import { SitesAPI } from './supabase.js';
-import { getSiteColor, getSiteEmoji, calcPercent, formatDate } from './utils.js';
+import { SitesAPI, AuditAPI, DevicesAPI } from './supabase.js';
+import { getSiteColor, getSiteEmoji, calcPercent, formatDate, getStatusLabel, getStatusIcon } from './utils.js';
 import { currentProfile, canEdit } from './auth.js';
 
 export async function renderDashboard(container) {
@@ -22,6 +22,12 @@ export async function renderDashboard(container) {
     const userName = currentProfile?.full_name?.split(' ')[0] || 'Teknisi';
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Selamat Pagi' : hour < 17 ? 'Selamat Siang' : 'Selamat Malam';
+
+    // Get recent activity
+    const recentAudits = await AuditAPI.getRecent(6);
+    const allDevices = await DevicesAPI.getAll();
+    const deviceMap = {};
+    allDevices.forEach(d => deviceMap[d.id] = d);
 
     container.innerHTML = `
       <div class="stagger">
@@ -67,30 +73,78 @@ export async function renderDashboard(container) {
           </div>
         </div>
 
-        <!-- Sites Section -->
-        <div class="section-header">
+        <!-- Recent Activity Section -->
+        <div class="section-header" style="margin-top:var(--space-6)">
           <div class="section-title">
-            <span class="section-title__icon">📍</span>
-            Semua Site
+            <span class="section-title__icon">⚡</span>
+            Aktivitas Terakhir
           </div>
-          ${canEdit() ? `
-            <button class="btn btn-primary btn-sm" onclick="showAddSiteModal()">
-              + Site Baru
-            </button>
-          ` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="App.navigate('audit')">Lihat Semua</button>
         </div>
 
-        <div class="sites-grid">
-          ${siteStats.map(site => renderSiteCard(site)).join('')}
+        <div class="card" style="padding:0;overflow:hidden">
+          ${recentAudits.length > 0 ? `
+            <div style="display:flex;flex-direction:column;">
+              ${recentAudits.map((log, i) => {
+                const device = deviceMap[log.device_id];
+                const devName = device ? device.name : 'Perangkat Terhapus';
+                const siteName = device?.sites?.name || '';
+                
+                let actionColor = 'var(--color-primary)';
+                let actionIcon = '📝';
+                if (log.action_type === 'fill') { actionColor = 'var(--color-filled)'; actionIcon = '🟢'; }
+                if (log.action_type === 'empty') { actionColor = 'var(--color-warning)'; actionIcon = '⚪'; }
+                if (log.action_type === 'import') { actionColor = 'var(--color-secondary)'; actionIcon = '📥'; }
+
+                return `
+                  <div style="padding:var(--space-3) var(--space-4); display:flex; align-items:center; gap:var(--space-3); border-bottom:${i < recentAudits.length-1 ? '1px solid var(--color-border)' : 'none'}">
+                    <div style="width:36px;height:36px;border-radius:10px;background:${actionColor}22;color:${actionColor};display:grid;place-items:center;font-size:1.1rem;flex-shrink:0">
+                      ${actionIcon}
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:0.9rem;font-weight:600;margin-bottom:2px">${log.details || 'Update Port'}</div>
+                      <div style="font-size:0.75rem;color:var(--color-text-muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                        <span style="color:var(--color-primary)">${devName}</span> •
+                        <span>Port ${log.port_number}</span> •
+                        <span>${log.changed_by}</span>
+                      </div>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--color-text-muted);white-space:nowrap;text-align:right">
+                      ${formatDate(log.changed_at)}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div style="padding:var(--space-5);text-align:center;color:var(--color-text-muted)">
+              Belum ada aktivitas terbaru.
+            </div>
+          `}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="section-header" style="margin-top:var(--space-6)">
+          <div class="section-title">
+            <span class="section-title__icon">🚀</span>
+            Pintasan Cepat
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--space-3);margin-bottom:var(--space-6)">
           ${canEdit() ? `
-            <div class="card card--clickable" onclick="showAddSiteModal()"
-                 style="min-height:160px;display:grid;place-items:center;border-style:dashed;opacity:0.6;">
-              <div style="text-align:center;">
-                <div style="font-size:36px;margin-bottom:8px;">➕</div>
-                <div style="font-size:0.875rem;font-weight:600;color:var(--color-text-muted)">Tambah Site Baru</div>
-              </div>
+            <div class="card card--clickable" onclick="document.getElementById('nav-import').click()" style="text-align:center;padding:var(--space-4)">
+              <div style="font-size:2rem;margin-bottom:var(--space-2)">📥</div>
+              <div style="font-weight:600;font-size:0.9rem">Import Excel</div>
             </div>
           ` : ''}
+          <div class="card card--clickable" onclick="App.navigate('audit')" style="text-align:center;padding:var(--space-4)">
+            <div style="font-size:2rem;margin-bottom:var(--space-2)">📋</div>
+            <div style="font-weight:600;font-size:0.9rem">Riwayat Global</div>
+          </div>
+          <div class="card card--clickable" onclick="App.navigate('settings')" style="text-align:center;padding:var(--space-4)">
+            <div style="font-size:2rem;margin-bottom:var(--space-2)">⚙️</div>
+            <div style="font-weight:600;font-size:0.9rem">Pengaturan</div>
+          </div>
         </div>
       </div>
     `;

@@ -47,11 +47,12 @@ export function getStatusIcon(status) {
   return map[status] || '❓';
 }
 
-// Device type helpers
 export function getDeviceIcon(typeName, customIcon = null) {
   if (customIcon) {
     if (customIcon.startsWith('<')) return customIcon;
-    return `<img src="${customIcon}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;">`;
+    // Auto-fix old URLs with spaces for GTGO and Huawei
+    let fixedIcon = customIcon.replace('GTGO OLT.jpeg', 'GTGO-OLT.jpeg').replace('logo apk.jpg', 'logo-apk.jpg');
+    return `<img src="${fixedIcon}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" onerror="this.src='/logos/GTGO-OLT.jpeg'">`;
   }
   const svgs = {
     'OTB': '<img src="/logos/OTB.webp" style="width:100%;height:100%;object-fit:contain;">',
