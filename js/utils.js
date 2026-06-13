@@ -52,7 +52,17 @@ export function getDeviceIcon(typeName, customIcon = null) {
     if (customIcon.startsWith('<')) return customIcon;
     // Auto-fix old URLs with spaces for GTGO and Huawei
     let fixedIcon = customIcon.replace('GTGO OLT.jpeg', 'GTGO-OLT.jpeg').replace('logo apk.jpg', 'logo-apk.jpg');
-    return `<img src="${fixedIcon}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" onerror="this.src='/logos/GTGO-OLT.jpeg'">`;
+    
+    const fallbacks = {
+      'OTB': '/logos/OTB.webp',
+      'CISCO': '/logos/CISCO.webp',
+      'HUAWEI': '/logos/Huawei.webp',
+      'GTGO': '/logos/GTGO-OLT.jpeg'
+    };
+    const fallbackSrc = fallbacks[typeName];
+    const onerrorAttr = fallbackSrc ? `onerror="this.onerror=null; this.src='${fallbackSrc}';"` : `onerror="this.style.display='none';"`;
+    
+    return `<img src="${fixedIcon}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;" ${onerrorAttr}>`;
   }
   const svgs = {
     'OTB': '<img src="/logos/OTB.webp" style="width:100%;height:100%;object-fit:contain;">',
