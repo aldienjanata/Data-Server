@@ -255,7 +255,19 @@ export async function renderGTGOView(device, container) {
     const SLOTS = 16;
     const PORTS_PER_SLOT = 8;
     const START_SLOT = 3;
-    const filledCount = ports.filter(p => p.status === 'filled').length;
+    
+    // Calculate stats based on what is actually rendered in the grid
+    let realFilledCount = 0;
+    for (let p = 1; p <= PORTS_PER_SLOT; p++) {
+      for (let s = START_SLOT; s < START_SLOT + SLOTS; s++) {
+        const label = `1/${s}/${p}`;
+        const portNum = (s - START_SLOT) * PORTS_PER_SLOT + p;
+        const pData = portMap[label] || portMap[String(portNum)];
+        if (pData && pData.status === 'filled') realFilledCount++;
+      }
+    }
+
+    const filledCount = realFilledCount;
     const totalPorts = SLOTS * PORTS_PER_SLOT;
     const pct = Math.round(filledCount / totalPorts * 100);
 
@@ -351,7 +363,7 @@ export async function renderGTGOView(device, container) {
         if (isFilled)        { bg = `rgba(16,185,129,0.14)`;  borderColor = FILLED_COLOR;   labelColor = FILLED_COLOR; }
         else if (isUnverif)  { bg = `rgba(245,158,11,0.10)`;  borderColor = UNVERIF_COLOR;  labelColor = UNVERIF_COLOR; }
         else if (isReserved) { bg = `rgba(139,92,246,0.10)`;  borderColor = RESERVED_COLOR; labelColor = RESERVED_COLOR; }
-        else                 { bg = `rgba(255,255,255,0.03)`;  borderColor = 'rgba(255,255,255,0.08)'; labelColor = 'var(--color-text-muted)'; }
+        else                 { bg = `rgba(255,255,255,0.04)`;  borderColor = 'rgba(255,255,255,0.15)'; labelColor = 'rgba(255,255,255,0.55)'; }
 
         html += `
           <div
@@ -363,10 +375,10 @@ export async function renderGTGOView(device, container) {
             style="
               border-radius:4px;
               padding:4px 2px;
-              min-height:54px;
+              min-height:56px;
               display:flex;flex-direction:column;
               align-items:center;justify-content:center;
-              gap:2px;
+              gap:3px;
               cursor:pointer;
               transition:all 0.12s ease;
               background:${bg};
@@ -374,8 +386,8 @@ export async function renderGTGOView(device, container) {
             "
             onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'"
             onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
-            <div style="font-family:var(--font-mono);font-weight:700;font-size:0.58rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
-            ${isFilled ? `<div style="font-size:0.52rem;color:#94a3b8;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;word-break:break-word">${shortConn || '—'}</div>` : ''}
+            <div style="font-family:var(--font-mono);font-weight:700;font-size:0.6rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
+            ${isFilled ? `<div style="font-size:0.55rem;color:#cbd5e1;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;word-break:break-word">${shortConn || '—'}</div>` : ''}
             ${p?.notes ? `<div style="font-size:0.46rem;color:#64748b;text-align:center;line-height:1.1;margin-top:2px;font-style:italic;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.notes}">${p.notes}</div>` : ''}
           </div>
         `;
