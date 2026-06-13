@@ -284,14 +284,16 @@ export async function renderGTGOView(device, container) {
       
       for (let slot = 0; slot < SLOTS; slot++) {
         const label = `1/${START_SLOT + slot}/${port}`;
-        // Look up by port_label first, then fallback sequential search
-        const p = portMap[label] || ports.find(px => px.port_label === label);
+        // Calculate the sequential port_number for this slot/port
+        const calcPortNumber = slot * PORTS_PER_SLOT + port;
+        // Look up by port_label first, then by calculated port_number
+        const p = portMap[label] || ports.find(px => px.port_number === calcPortNumber);
         const status = p?.status || 'empty';
         const conn = p?.connection_detail || p?.connection_label || '';
         const shortConn = conn.length > 9 ? conn.slice(0,8)+'…' : conn;
         const isFilled = status === 'filled';
         const portId = p?.id || '';
-        const portNum = p?.port_number || 0;
+        const portNum = p?.port_number || calcPortNumber;
 
         html += `
           <div class="panel-port ${status}"

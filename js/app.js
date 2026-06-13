@@ -61,9 +61,24 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
     if (portId) {
       portData = ports.find(p => p.id === portId);
     }
-    // For GTGO: if no portId matched but portLabel given, find by port_label
-    if (!portData && portLabel) {
+    // For GTGO: if no portId matched but portLabel given (e.g. '1/3/1'),
+    // calculate the sequential port_number and find the port that way
+    if (!portData && portLabel && portLabel !== 'null') {
+      // Try by port_label field first
       portData = ports.find(p => p.port_label === portLabel);
+      
+      // If still not found, calculate port_number from label format 1/SLOT/PORT
+      if (!portData) {
+        const parts = portLabel.split('/');
+        if (parts.length === 3) {
+          const START_SLOT = 3;
+          const PORTS_PER_SLOT = 8;
+          const slot = parseInt(parts[1]);
+          const port = parseInt(parts[2]);
+          const calcPortNumber = (slot - START_SLOT) * PORTS_PER_SLOT + port;
+          portData = ports.find(p => p.port_number === calcPortNumber);
+        }
+      }
     }
     // After finding portData, use its real id for saving
     if (portData) portId = portData.id;
