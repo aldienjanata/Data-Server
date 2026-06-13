@@ -86,15 +86,15 @@ export async function renderOTBView(device, container) {
       }
     }
 
-    // Dynamic cell sizing: OTB 96 (24 cols) = larger cells, OTB 144 (12 cols) = medium
-    const cellMinPx = cols >= 20 ? 64 : cols >= 12 ? 58 : 48;
-    const fontSizeNum = cols >= 20 ? '0.85' : cols >= 12 ? '0.8' : '0.72';
-    const labelFontSize = cols >= 20 ? '0.62' : cols >= 12 ? '0.55' : '0.5';
+    // Dynamic cell sizing: enforce minimum 80px per cell so squares are large enough for text
+    const cellMinPx = 80;
+    const fontSizeNum = cols >= 20 ? '0.8' : cols >= 12 ? '0.75' : '0.7';
+    const labelFontSize = cols >= 20 ? '0.6' : cols >= 12 ? '0.55' : '0.5';
 
     // Render Grid
     let html = `
       <div class="card" style="overflow-x:auto;padding:var(--space-5)">
-        <div style="min-width:${cols * cellMinPx}px;display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:5px">
+        <div style="min-width:${cols * cellMinPx}px;display:grid;grid-template-columns:repeat(${cols}, ${cellMinPx}px);gap:5px">
     `;
 
     for (let r = 0; r < rowsCount; r++) {
@@ -127,35 +127,36 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  height: 110px;
+                  width: ${cellMinPx}px;
+                  height: ${cellMinPx}px;
                   box-sizing: border-box;
                   overflow: hidden;
                   border: 2px solid ${tubeColor.hex};
                   background: ${isFilled ? coreColor.hex : 'transparent'};
                   color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
-                  border-radius: 5px;
+                  border-radius: 6px;
                   display: flex;
                   flex-direction: column;
                   align-items: center;
                   justify-content: center;
-                  padding: 5px 3px;
+                  padding: 4px 3px;
                   cursor: pointer;
                   transition: transform 0.1s;
                   opacity: ${opacity};
                   position: relative;
                   text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
                 "
-               onmouseenter="this.style.transform='scale(1.12)';this.style.zIndex='10'"
+               onmouseenter="this.style.transform='scale(1.1)';this.style.zIndex='10'"
                onmouseleave="this.style.transform='scale(1)';this.style.zIndex='1'">
             
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
             <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1;flex-shrink:0">${p.port_number}</span>
             ${isFilled ? `
-              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:4px;line-height:1.2;width:100%;text-align:center;padding:0 2px;word-break:break-word;">
+              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;width:100%;text-align:center;padding:0 2px;word-break:break-word;">
                 ${formattedLabel}
-                ${p.connection_detail ? `<div style="margin-top:3px;font-size:0.55rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.2">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:2px;font-size:0.44rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
+                ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.55rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.2">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:1px;font-size:0.44rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
