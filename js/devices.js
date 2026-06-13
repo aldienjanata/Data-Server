@@ -29,7 +29,21 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
 
     // Get stats
     const stats = await PortsAPI.getStats(deviceId);
-    const pct = calcPercent(stats.filled, stats.total);
+    
+    // Calculate actual totals
+    let actualTotal = device.total_ports || stats.total;
+    if (!device.total_ports) {
+      if (typeName === 'GTGO' || typeName === 'OLT') actualTotal = Math.max(actualTotal, 128);
+      else if (typeName === 'CISCO') actualTotal = Math.max(actualTotal, 48);
+      else if (typeName === 'HUAWEI') actualTotal = Math.max(actualTotal, 56);
+      else if (typeName === 'OTB') {
+        const is144 = device.model?.includes('144') || device.name?.includes('144') || stats.total === 144;
+        actualTotal = Math.max(actualTotal, is144 ? 144 : 96);
+      }
+    }
+    
+    const pct = calcPercent(stats.filled, actualTotal);
+    const actualEmpty = Math.max(0, actualTotal - stats.filled - (stats.unverified || 0) - (stats.reserved || 0));
 
     container.innerHTML = `
       <div>
@@ -78,7 +92,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
             <div class="stat-card__label">Terisi</div>
           </div>
           <div class="stat-card" style="padding:12px">
-            <div class="stat-card__value" style="font-size:1.5rem">${stats.empty}</div>
+            <div class="stat-card__value" style="font-size:1.5rem">${actualEmpty}</div>
             <div class="stat-card__label">Kosong</div>
           </div>
           <div class="stat-card" style="--stat-accent:var(--color-unverified);--stat-accent-bg:rgba(245,158,11,0.1);padding:12px">

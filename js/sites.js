@@ -25,10 +25,23 @@ export async function renderSitePage(siteId, container) {
     // Calculate site-wide stats from devices
     let totalPorts = 0, filledPorts = 0;
     devices.forEach(d => {
-      (d.port_connections || []).forEach(pc => {
-        totalPorts++;
-        if (pc.status === 'filled') filledPorts++;
-      });
+      const typeName = d.device_types?.name || 'OTHER';
+      const ports = d.port_connections || [];
+      const filled = ports.filter(p => p.status === 'filled').length;
+      
+      let total = d.total_ports || ports.length;
+      if (!d.total_ports) {
+        if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
+        else if (typeName === 'CISCO') total = Math.max(total, 48);
+        else if (typeName === 'HUAWEI') total = Math.max(total, 56);
+        else if (typeName === 'OTB') {
+          const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length === 144;
+          total = Math.max(total, is144 ? 144 : 96);
+        }
+      }
+      
+      totalPorts += total;
+      filledPorts += filled;
     });
     const pct = calcPercent(filledPorts, totalPorts);
 
@@ -180,8 +193,19 @@ function renderDeviceListItem(device, siteCode, site) {
 
   const ports = device.port_connections || [];
   const filled = ports.filter(p => p.status === 'filled').length;
-  const total  = ports.length || device.total_ports;
-  const pct    = calcPercent(filled, total);
+  
+  let total = device.total_ports || ports.length;
+  if (!device.total_ports) {
+    if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
+    else if (typeName === 'CISCO') total = Math.max(total, 48);
+    else if (typeName === 'HUAWEI') total = Math.max(total, 56);
+    else if (typeName === 'OTB') {
+      const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+      total = Math.max(total, is144 ? 144 : 96);
+    }
+  }
+  
+  const pct = calcPercent(filled, Math.max(total, 1));
 
   return `
     <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteCode}', deviceId:'${device.id}', deviceName:'${device.name}'})">

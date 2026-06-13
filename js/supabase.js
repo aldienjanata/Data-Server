@@ -135,7 +135,8 @@ const SitesAPI = {
     const { data, error } = await supabase
       .from('devices')
       .select(`
-        id,
+        id, name, model, total_ports,
+        device_types(name),
         port_connections(status)
       `)
       .eq('site_id', siteId)
@@ -144,12 +145,28 @@ const SitesAPI = {
 
     let total = 0, filled = 0, empty = 0, unverified = 0;
     (data || []).forEach(device => {
-      (device.port_connections || []).forEach(pc => {
-        total++;
-        if (pc.status === 'filled') filled++;
-        else if (pc.status === 'empty') empty++;
-        else if (pc.status === 'unverified') unverified++;
-      });
+      const typeName = device.device_types?.name || 'OTHER';
+      const ports = device.port_connections || [];
+      const f = ports.filter(p => p.status === 'filled').length;
+      
+      let devTotal = device.total_ports || ports.length;
+      if (!device.total_ports) {
+        if (typeName === 'GTGO' || typeName === 'OLT') devTotal = Math.max(devTotal, 128);
+        else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 48);
+        else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
+        else if (typeName === 'OTB') {
+          const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+          devTotal = Math.max(devTotal, is144 ? 144 : 96);
+        }
+      }
+      
+      total += devTotal;
+      filled += f;
+      // Estimate other stats based on difference
+      const unv = ports.filter(p => p.status === 'unverified').length;
+      const res = ports.filter(p => p.status === 'reserved').length;
+      unverified += unv;
+      empty += Math.max(0, devTotal - f - unv - res);
     });
 
     return { total, filled, empty, unverified, devices: data?.length || 0 };
