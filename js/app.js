@@ -228,8 +228,6 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
             <select class="form-select" id="modal-status">
               <option value="filled"     ${status === 'filled'     ? 'selected' : ''}>🟢 Terisi</option>
               <option value="empty"      ${status === 'empty'      ? 'selected' : ''}>⚪ Kosong</option>
-              <option value="unverified" ${status === 'unverified' ? 'selected' : ''}>🟡 Belum Verifikasi</option>
-              <option value="reserved"   ${status === 'reserved'   ? 'selected' : ''}>🟣 Reservasi</option>
             </select>
           </div>
 
@@ -407,7 +405,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
     notes: notes || null,
     // Save port_label for GTGO slots (e.g. 1/3/1) so we can look them up later
     ...(portLabel && portLabel !== 'null' ? { port_label: portLabel } : {}),
-    updated_by: currentUser?.email || 'anonymous',
+    updated_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous',
     last_verified_at: status === 'filled' ? new Date().toISOString() : undefined
   };
 
@@ -444,7 +442,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
         connection_target_port: savedPort.id,
         status: status === 'empty' ? 'empty' : 'filled', // Keep synced status
         notes: notes || null,
-        updated_by: currentUser?.email || 'anonymous'
+        updated_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous'
       });
     }
 
@@ -461,7 +459,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
     console.error('[App] Save port error:', err);
     // Queue for offline sync
     if (!isOnline()) {
-      await OfflineQueue.add({ type: 'updatePort', portId, updates, updatedBy: currentUser?.email });
+      await OfflineQueue.add({ type: 'updatePort', portId, updates, updatedBy: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous' });
       showToast('📱 Tersimpan offline, akan disinkronkan saat online', 'warning');
       document.querySelector('.modal-backdrop')?.remove();
     } else {
@@ -480,8 +478,8 @@ window.verifyPort = async function(portId, deviceId) {
     await PortsAPI.update(portId, {
       status: 'filled',
       last_verified_at: new Date().toISOString(),
-      verified_by: currentUser?.email || 'anonymous',
-      updated_by: currentUser?.email || 'anonymous'
+      verified_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous',
+      updated_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous'
     });
     showToast('✅ Port ditandai terverifikasi', 'success');
     document.querySelector('.modal-backdrop')?.remove();

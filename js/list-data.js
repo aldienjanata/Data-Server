@@ -16,7 +16,7 @@ export async function renderListDataPage(container) {
 
       <div class="card" style="margin-bottom:var(--space-5)">
         <div class="card__body" style="display:flex;gap:var(--space-3);flex-wrap:wrap">
-          <input type="text" class="form-input" id="filter-search" placeholder="Cari port/lokasi..." style="flex:2;min-width:200px" onkeydown="if(event.key==='Enter') loadListData()">
+          <input type="text" class="form-input" id="filter-search" placeholder="Cari port/lokasi..." style="flex:1;min-width:200px;max-width:300px" onkeydown="if(event.key==='Enter') loadListData()">
           <select class="form-select" id="filter-site" style="flex:1;min-width:150px">
             <option value="all">Semua Site</option>
           </select>

@@ -100,7 +100,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
         
 
         <!-- Stats Row -->
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-5)">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);margin-bottom:var(--space-5)">
           <div class="stat-card" style="--stat-accent:var(--color-filled);--stat-accent-bg:rgba(16,185,129,0.1);padding:12px">
             <div class="stat-card__value" style="font-size:1.5rem">${stats.filled}</div>
             <div class="stat-card__label">Terisi</div>
@@ -108,10 +108,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           <div class="stat-card" style="padding:12px">
             <div class="stat-card__value" style="font-size:1.5rem">${actualEmpty}</div>
             <div class="stat-card__label">Kosong</div>
-          </div>
-          <div class="stat-card" style="--stat-accent:var(--color-unverified);--stat-accent-bg:rgba(245,158,11,0.1);padding:12px">
-            <div class="stat-card__value" style="font-size:1.5rem">${stats.unverified || 0}</div>
-            <div class="stat-card__label">Belum Verif</div>
           </div>
           <div class="stat-card" style="--stat-accent:${color};--stat-accent-bg:${bgColor};padding:12px">
             <div class="stat-card__value" style="font-size:1.5rem;color:${color}">${pct}%</div>
@@ -121,7 +117,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
 
         <!-- Port Filter Chips and Search -->
         <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom:var(--space-4); align-items:center;">
-          <div class="search-wrapper" style="flex:1; min-width:200px;">
+          <div class="search-wrapper" style="width: 100%; max-width: 300px;">
             <span class="search-icon">🔍</span>
             <input class="search-input" type="text" id="device-search" placeholder="Cari port/lokasi di perangkat ini..." autocomplete="off" oninput="filterDevicePorts()">
           </div>
@@ -129,7 +125,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
             <div class="chip active" onclick="filterPorts(this,'all')" data-filter="all">Semua</div>
             <div class="chip" onclick="filterPorts(this,'filled')" data-filter="filled">🟢 Terisi</div>
             <div class="chip" onclick="filterPorts(this,'empty')" data-filter="empty">⚪ Kosong</div>
-            <div class="chip" onclick="filterPorts(this,'unverified')" data-filter="unverified">🟡 Belum Verifikasi</div>
           </div>
         </div>
 
@@ -150,10 +145,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
             📋 Riwayat
           </button>
-          ${canEdit() ? `
-            <button class="btn btn-secondary btn-sm" onclick="fillAllEmpty('${deviceId}')">
-              ⚡ Isi Port
-            </button>
           ` : ''}
         </div>
 
@@ -481,39 +472,4 @@ window.confirmDeleteDevice = function(deviceId, siteId) {
     .catch(err => showToast(`❌ ${err.message}`, 'error'));
 };
 
-// =====================================================
-// FILL ALL EMPTY
-// =====================================================
-window.fillAllEmpty = function(deviceId) {
-  const backdrop = document.createElement('div');
-  backdrop.className = 'modal-backdrop';
-  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
-  backdrop.innerHTML = `
-    <div class="modal" onclick="event.stopPropagation()">
-      <div class="modal__handle"></div>
-      <div class="modal__title">⚡ Isi Port Massal</div>
-      <p style="color:var(--color-text-muted);margin-bottom:var(--space-4)">
-        Tandai semua port kosong sebagai "Belum Verifikasi" untuk diisi nanti
-      </p>
-      <div class="modal__actions">
-        <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-backdrop').remove()">Batal</button>
-        <button class="btn btn-warning" style="flex:2;background:rgba(245,158,11,0.15);color:var(--color-warning);border:1px solid rgba(245,158,11,0.3)" 
-                onclick="doMarkUnverified('${deviceId}')">🟡 Tandai Belum Verifikasi</button>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(backdrop);
-};
 
-window.doMarkUnverified = async function(deviceId) {
-  try {
-    const ports = await PortsAPI.getByDevice(deviceId);
-    const emptyPorts = ports.filter(p => p.status === 'empty');
-    await Promise.all(emptyPorts.map(p => PortsAPI.update(p.id, { status: 'unverified' })));
-    document.querySelector('.modal-backdrop').remove();
-    showToast(`✅ ${emptyPorts.length} port ditandai belum verifikasi`, 'success');
-    location.reload();
-  } catch (err) {
-    showToast(`❌ ${err.message}`, 'error');
-  }
-};

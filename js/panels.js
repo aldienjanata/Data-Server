@@ -340,14 +340,12 @@ export async function renderGTGOView(device, container) {
         const conn = p?.connection_detail || p?.connection_label || '';
         const shortConn = conn.length > 9 ? conn.slice(0, 8) + '…' : conn;
         const isFilled   = status === 'filled';
-        const isUnverif  = status === 'unverified';
         const isReserved = status === 'reserved';
         const portId  = p?.id || '';
         const portNum = p?.port_number || calcPortNumber;
 
         let bg, borderColor, labelColor;
-        if (isFilled)        { bg = `rgba(16,185,129,0.14)`;  borderColor = FILLED_COLOR;   labelColor = '#ffffff'; }
-        else if (isUnverif)  { bg = `rgba(245,158,11,0.10)`;  borderColor = UNVERIF_COLOR;  labelColor = '#ffffff'; }
+        if (isFilled)        { bg = `rgba(16,185,129,0.15)`;  borderColor = FILLED_COLOR;   labelColor = '#ffffff'; }
         else if (isReserved) { bg = `rgba(139,92,246,0.10)`;  borderColor = RESERVED_COLOR; labelColor = '#ffffff'; }
         else                 { bg = `rgba(255,255,255,0.04)`;  borderColor = 'rgba(255,255,255,0.15)'; labelColor = 'rgba(255,255,255,0.55)'; }
 
@@ -393,10 +391,6 @@ export async function renderGTGOView(device, container) {
           <div style="display:flex;align-items:center;gap:5px">
             <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2)"></div>
             <span style="font-size:0.68rem;color:var(--color-text-muted)">Kosong</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:5px">
-            <div style="width:8px;height:8px;border-radius:50%;background:${UNVERIF_COLOR}"></div>
-            <span style="font-size:0.68rem;color:var(--color-text-muted)">Belum Verifikasi</span>
           </div>
           <div style="display:flex;align-items:center;gap:5px">
             <div style="width:8px;height:8px;border-radius:50%;background:${RESERVED_COLOR}"></div>
