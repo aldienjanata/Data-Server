@@ -89,8 +89,10 @@ export async function renderOTBView(device, container) {
     // OTB 144 (12 cols): responsive 1fr columns so grid fills container width without scroll
     // OTB 96 (24 cols): fixed 80px columns so cells are large enough, with horizontal scroll
     const cellMinPx = cols <= 12 ? null : 80; // null = use 1fr
-    const fontSizeNum = cols >= 20 ? '0.8' : '0.72';
-    const labelFontSize = cols >= 20 ? '0.6' : '0.52';
+    const fontSizeNum = cols <= 12 ? '1.0' : '0.8';
+    const labelFontSize = cols <= 12 ? '0.68' : '0.6';
+    const connFontSize = cols <= 12 ? '0.62' : '0.55';
+    const notesFontSize = cols <= 12 ? '0.52' : '0.46';
     const gridCols = cellMinPx ? `repeat(${cols}, ${cellMinPx}px)` : `repeat(${cols}, 1fr)`;
     const gridMinWidth = cellMinPx ? `${cols * cellMinPx}px` : '100%';
 
@@ -157,8 +159,8 @@ export async function renderOTBView(device, container) {
             ${isFilled ? `
               <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;width:100%;text-align:center;padding:0 2px;word-break:break-word;">
                 ${formattedLabel}
-                ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.55rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.2">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:2px;font-size:0.46rem;font-weight:700;font-style:italic;color:${coreColor.text === '#fff' ? '#ffffff' : '#000000'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
+                ${p.connection_detail ? `<div style="margin-top:2px;font-size:${connFontSize}rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.2">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:2px;font-size:${notesFontSize}rem;font-weight:700;font-style:italic;color:${coreColor.text === '#fff' ? '#ffffff' : '#000000'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
