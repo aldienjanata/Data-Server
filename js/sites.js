@@ -184,7 +184,7 @@ function renderDeviceListItem(device, siteId) {
   const pct    = calcPercent(filled, total);
 
   return `
-    <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteId}',deviceId:'${device.id}'})">
+    <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteId}', deviceId:'${device.id}', deviceName:'${device.name}'})">
       <div class="device-list-item__icon" style="background:${bgColor}">
         ${icon}
       </div>

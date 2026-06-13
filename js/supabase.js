@@ -203,6 +203,30 @@ const DevicesAPI = {
     return data;
   },
 
+  async getBySiteAndName(siteCodeOrId, deviceName) {
+    const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(siteCodeOrId);
+    let siteQuery = supabase.from('sites').select('id');
+    if (isUUID) siteQuery = siteQuery.eq('id', siteCodeOrId);
+    else siteQuery = siteQuery.or(`code.ilike.${siteCodeOrId},name.ilike.${siteCodeOrId}`);
+    
+    const { data: siteData, error: siteErr } = await siteQuery.single();
+    if (siteErr) throw siteErr;
+
+    const { data, error } = await supabase
+      .from('devices')
+      .select(`
+        *,
+        device_types(name, icon, color),
+        sites(name, location)
+      `)
+      .eq('site_id', siteData.id)
+      .ilike('name', deviceName)
+      .eq('is_active', true)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   async create(deviceData) {
     const { data, error } = await supabase
       .from('devices')

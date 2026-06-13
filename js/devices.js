@@ -8,11 +8,20 @@ import { showToast } from './app.js';
 import { renderOTBView, exportOTBData } from './otb.js';
 import { renderPanelView, renderGTGOView } from './panels.js';
 
-export async function renderDevicePage(deviceId, siteId, container) {
-  if (!deviceId) { window.App.navigate('dashboard'); return; }
-
+export async function renderDevicePage(deviceId, siteId, container, deviceName) {
   try {
-    const device = await DevicesAPI.getById(deviceId);
+    let device;
+    if (!deviceId && siteId && deviceName) {
+      device = await DevicesAPI.getBySiteAndName(siteId, deviceName);
+      if (!device) throw new Error('Perangkat tidak ditemukan');
+      deviceId = device.id;
+    } else if (deviceId) {
+      device = await DevicesAPI.getById(deviceId);
+    } else {
+      window.App.navigate('dashboard');
+      return;
+    }
+
     const typeName = device.device_types?.name || 'OTHER';
     const icon    = getDeviceIcon(typeName);
     const color   = getDeviceColor(typeName);

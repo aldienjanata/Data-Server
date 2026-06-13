@@ -395,8 +395,12 @@ const Router = {
     let hash = `#/${page}`;
     if (page === 'site' && params.siteId) {
       hash += `/${params.siteId}`;
-    } else if (page === 'device' && params.deviceId) {
-      hash += `/${params.deviceId}`;
+    } else if (page === 'device') {
+      if (params.siteId && params.deviceName) {
+        hash += `/${params.siteId}/${encodeURIComponent(params.deviceName)}`;
+      } else if (params.deviceId) {
+        hash += `/${params.deviceId}`;
+      }
     }
     
     history.pushState({ page, params }, '', hash);
@@ -425,7 +429,12 @@ const Router = {
     if (page === 'site') {
       params.siteId = parts[1];
     } else if (page === 'device') {
-      params.deviceId = parts[1];
+      if (parts.length >= 3) {
+        params.siteId = parts[1];
+        params.deviceName = decodeURIComponent(parts[2]);
+      } else {
+        params.deviceId = parts[1];
+      }
     }
     this.render(page, params);
     updateBottomNav(page);

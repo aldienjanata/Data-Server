@@ -128,7 +128,7 @@ async function loadListData() {
               <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
               <td>
                 <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"
-                  onclick="App.navigate('device',{siteId:'${p.devices?.site_id || ''}',deviceId:'${p.device_id}'})"
+                  onclick="App.navigate('device',{siteId:'${p.devices?.sites?.code || p.devices?.site_id || ''}', deviceId:'${p.device_id}', deviceName:'${p.devices?.name || ''}'})"
                   title="Lihat di Perangkat">
                   🔌 Lihat
                 </button>
