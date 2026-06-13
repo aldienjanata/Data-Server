@@ -23,7 +23,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
     }
 
     const typeName = device.device_types?.name || 'OTHER';
-    const icon    = getDeviceIcon(typeName);
+    const icon    = getDeviceIcon(typeName, device.device_types?.icon);
     const color   = getDeviceColor(typeName);
     const bgColor = getDeviceBgColor(typeName);
 

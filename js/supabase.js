@@ -150,14 +150,12 @@ const SitesAPI = {
       const f = ports.filter(p => p.status === 'filled').length;
       
       let devTotal = device.total_ports || ports.length;
-      if (!device.total_ports) {
-        if (typeName === 'GTGO' || typeName === 'OLT') devTotal = Math.max(devTotal, 128);
-        else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 48);
-        else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
-        else if (typeName === 'OTB') {
-          const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
-          devTotal = Math.max(devTotal, is144 ? 144 : 96);
-        }
+      if (typeName === 'GTGO' || typeName === 'OLT') devTotal = Math.max(devTotal, 128);
+      else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 48);
+      else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
+      else if (typeName === 'OTB') {
+        const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+        devTotal = Math.max(devTotal, is144 ? 144 : 96);
       }
       
       total += devTotal;
@@ -184,8 +182,19 @@ const DeviceTypesAPI = {
       .order('name');
     if (error) throw error;
     return data;
+  },
+
+  async create(typeData) {
+    const { data, error } = await supabase
+      .from('device_types')
+      .insert([typeData])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
   }
 };
+
 
 // =====================================================
 // DEVICES QUERIES

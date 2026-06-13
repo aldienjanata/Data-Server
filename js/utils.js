@@ -48,7 +48,11 @@ export function getStatusIcon(status) {
 }
 
 // Device type helpers
-export function getDeviceIcon(typeName) {
+export function getDeviceIcon(typeName, customIcon = null) {
+  if (customIcon) {
+    if (customIcon.startsWith('<')) return customIcon;
+    return `<img src="${customIcon}" style="width:100%;height:100%;object-fit:contain;border-radius:6px;">`;
+  }
   const svgs = {
     'OTB': '<img src="/logos/OTB.webp" style="width:100%;height:100%;object-fit:contain;">',
     'CISCO': '<img src="/logos/CISCO.webp" style="width:100%;height:100%;object-fit:contain;">',

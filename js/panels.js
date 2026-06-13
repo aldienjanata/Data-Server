@@ -263,7 +263,7 @@ export async function renderGTGOView(device, container) {
         <div class="device-panel__rack" style="border-color:${deviceColor}33;overflow-x:auto;padding:var(--space-5)">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div style="font-family:var(--font-mono);font-size:0.65rem;color:${deviceColor};font-weight:700;letter-spacing:0.1em">${device.name} — GTGO/OLT</div>
-            <div style="font-size:0.6rem;color:var(--color-text-muted);font-family:var(--font-mono)">${ports.filter(p=>p.status==='filled').length}/${ports.length} PORT TERISI</div>
+            <div style="font-size:0.6rem;color:var(--color-text-muted);font-family:var(--font-mono)">${ports.filter(p=>p.status==='filled').length}/${SLOTS*PORTS_PER_SLOT} PORT TERISI</div>
           </div>
           <div style="height:3px;background:linear-gradient(90deg,transparent,${deviceColor},transparent);border-radius:var(--radius-full);margin-bottom:16px;opacity:0.6"></div>
           

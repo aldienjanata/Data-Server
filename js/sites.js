@@ -30,14 +30,12 @@ export async function renderSitePage(siteId, container) {
       const filled = ports.filter(p => p.status === 'filled').length;
       
       let total = d.total_ports || ports.length;
-      if (!d.total_ports) {
-        if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
-        else if (typeName === 'CISCO') total = Math.max(total, 48);
-        else if (typeName === 'HUAWEI') total = Math.max(total, 56);
-        else if (typeName === 'OTB') {
-          const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length === 144;
-          total = Math.max(total, is144 ? 144 : 96);
-        }
+      if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
+      else if (typeName === 'CISCO') total = Math.max(total, 48);
+      else if (typeName === 'HUAWEI') total = Math.max(total, 56);
+      else if (typeName === 'OTB') {
+        const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length === 144;
+        total = Math.max(total, is144 ? 144 : 96);
       }
       
       totalPorts += total;
@@ -187,7 +185,7 @@ export async function renderSitePage(siteId, container) {
 
 function renderDeviceListItem(device, siteCode, site) {
   const typeName = device.device_types?.name || 'OTHER';
-  const icon  = getDeviceIcon(typeName);
+  const icon  = getDeviceIcon(typeName, device.device_types?.icon);
   const color = getDeviceColor(typeName);
   const bgColor = getDeviceBgColor(typeName);
 
@@ -195,14 +193,12 @@ function renderDeviceListItem(device, siteCode, site) {
   const filled = ports.filter(p => p.status === 'filled').length;
   
   let total = device.total_ports || ports.length;
-  if (!device.total_ports) {
-    if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
-    else if (typeName === 'CISCO') total = Math.max(total, 48);
-    else if (typeName === 'HUAWEI') total = Math.max(total, 56);
-    else if (typeName === 'OTB') {
-      const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
-      total = Math.max(total, is144 ? 144 : 96);
-    }
+  if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
+  else if (typeName === 'CISCO') total = Math.max(total, 48);
+  else if (typeName === 'HUAWEI') total = Math.max(total, 56);
+  else if (typeName === 'OTB') {
+    const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+    total = Math.max(total, is144 ? 144 : 96);
   }
   
   const pct = calcPercent(filled, Math.max(total, 1));
@@ -258,11 +254,24 @@ window.showAddDeviceModal = async function(dbSiteId, slugSiteId) {
       </div>
       <div class="form-group">
         <label class="form-label">Tipe Perangkat *</label>
-        <select class="form-select" id="new-dev-type">
+        <select class="form-select" id="new-dev-type" onchange="document.getElementById('custom-type-group').style.display = this.value === 'custom' ? 'block' : 'none'">
           ${types.map(t => `<option value="${t.id}">${t.name} — ${t.description}</option>`).join('')}
+          <option value="custom">➕ Tipe Baru (Tulis Manual)...</option>
         </select>
       </div>
-      <div class="form-group">
+      
+      <div id="custom-type-group" style="display:none; margin-top:12px; padding:12px; background:var(--color-bg-overlay); border-radius:8px;">
+        <div class="form-group">
+          <label class="form-label">Nama Tipe Baru *</label>
+          <input class="form-input" id="custom-type-name" type="text" placeholder="cth: MIKROTIK">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Logo / Ikon Tipe Baru (Opsional)</label>
+          <input class="form-input" id="custom-type-logo" type="file" accept="image/*" style="padding:6px">
+        </div>
+      </div>
+      
+      <div class="form-group" style="margin-top:16px;">
         <label class="form-label">Model / Seri</label>
         <input class="form-input" id="new-dev-model" type="text" placeholder="cth: OTB 96 Core">
       </div>
@@ -290,21 +299,63 @@ window.showAddDeviceModal = async function(dbSiteId, slugSiteId) {
 
 window.submitAddDevice = async function(dbSiteId, slugSiteId) {
   const name       = document.getElementById('new-dev-name').value.trim();
-  const typeId     = document.getElementById('new-dev-type').value;
+  let typeId       = document.getElementById('new-dev-type').value;
   const model      = document.getElementById('new-dev-model').value.trim();
   const totalPorts = parseInt(document.getElementById('new-dev-ports').value) || 48;
   const rack       = document.getElementById('new-dev-rack').value.trim();
   const notes      = document.getElementById('new-dev-notes').value.trim();
 
   if (!name) { showToast('Nama perangkat wajib diisi', 'warning'); return; }
+  
   const btn = document.querySelector('.modal .btn-primary');
-  btn.classList.add('loading'); btn.disabled = true;
+  btn.disabled = true;
+  btn.textContent = 'Memproses...';
 
   try {
+    const { DevicesAPI, DeviceTypesAPI } = await import('./supabase.js');
+    
+    if (typeId === 'custom') {
+      const customName = document.getElementById('custom-type-name').value.trim();
+      if (!customName) {
+        showToast('Nama Tipe Baru wajib diisi', 'warning');
+        btn.disabled = false;
+        btn.textContent = '➕ Tambah';
+        return;
+      }
+      
+      const fileInput = document.getElementById('custom-type-logo');
+      let iconBase64 = null;
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        // Read file as data URL
+        iconBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      }
+      
+      const newType = await DeviceTypesAPI.create({
+        name: customName.toUpperCase(),
+        description: 'Perangkat khusus',
+        icon: iconBase64 || '',
+        color: '#8b5cf6'
+      });
+      typeId = newType.id;
+    }
+
+    const { currentProfile } = await import('./auth.js');
+    
+    // Sort order
+    const devices = await DevicesAPI.getBySite(dbSiteId);
+    const sortOrder = devices.length + 1;
+
     const device = await DevicesAPI.create({
       site_id: dbSiteId,
       device_type_id: typeId,
-      name, model: model || null,
+      name: name,
+      model: model || null,
       total_ports: totalPorts,
       rack_position: rack || null,
       notes: notes || null

@@ -8,7 +8,7 @@ import { renderSitePage } from './sites.js';
 import { renderDevicePage } from './devices.js';
 import { renderSettingsPage } from './settings.js';
 import { OfflineQueue } from './supabase.js';
-import { storage, vibrate, isOnline } from './utils.js';
+import { storage, vibrate, isOnline, getDeviceIcon } from './utils.js';
 
 // =====================================================
 // APP STATE
@@ -724,7 +724,7 @@ async function initApp() {
       
       <div class="app-sidebar__section" id="sidebar-sites-section" style="margin-top:var(--space-2)">
         <div class="app-sidebar__section-label">Lokasi & Perangkat</div>
-        <div id="sidebar-sites-content" style="font-size:0.8rem;color:var(--color-text-muted);padding-left:16px;">Memuat...</div>
+        <div id="sidebar-sites-content" style="font-size:0.85rem;color:var(--color-text);padding-left:16px;">Memuat...</div>
       </div>
       
       <div class="app-sidebar__spacer"></div>
@@ -837,17 +837,16 @@ async function renderSidebarSites() {
       `;
       
       if (siteDevices.length === 0) {
-        html += `<div style="font-size:0.75rem;color:var(--color-text-muted)">Tidak ada perangkat</div>`;
+        html += `<div style="font-size:0.8rem;color:var(--color-text-muted);opacity:0.7">Tidak ada perangkat</div>`;
       } else {
         siteDevices.forEach(device => {
           const type = device.device_types?.name || 'OTHER';
-          const icon = type === 'GTGO' ? '🎛️' : type === 'OTB' ? '📦' : '🖥️';
           html += `
-            <div class="sidebar-device-item" style="font-size:0.8rem;cursor:pointer;padding:4px 6px;border-radius:4px;transition:background 0.2s;display:flex;align-items:center;gap:6px" 
-                 onmouseover="this.style.background='var(--color-bg-overlay)'" 
-                 onmouseout="this.style.background='transparent'"
+            <div class="sidebar-device-item" style="font-size:0.85rem;color:var(--color-text);opacity:0.9;cursor:pointer;padding:4px 6px;border-radius:4px;transition:all 0.2s;display:flex;align-items:center;gap:6px" 
+                 onmouseover="this.style.background='var(--color-bg-overlay)';this.style.opacity='1'" 
+                 onmouseout="this.style.background='transparent';this.style.opacity='0.9'"
                  onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})">
-              <span>${icon}</span> <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${device.name}">${device.name}</span>
+              <div style="width:16px;height:16px;flex-shrink:0">${getDeviceIcon(type, device.device_types?.icon)}</div> <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${device.name}">${device.name}</span>
             </div>
           `;
         });
