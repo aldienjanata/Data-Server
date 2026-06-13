@@ -358,7 +358,7 @@ const PortsAPI = {
         devices(
           name, site_id,
           device_types(name, icon, color),
-          sites(name)
+          sites(name, code)
         )
       `)
       .ilike('connection_label', `%${query}%`)

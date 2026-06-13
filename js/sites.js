@@ -95,7 +95,7 @@ export async function renderSitePage(siteId, container) {
               <div class="empty-state__desc">Tambahkan perangkat untuk site ini</div>
               ${canEdit() ? `<button class="btn btn-primary" onclick="showAddDeviceModal('${actualSiteId}', '${siteId}')">+ Tambah Perangkat</button>` : ''}
             </div>
-          ` : devices.map(device => renderDeviceListItem(device, siteId)).join('')}
+          ` : devices.map(device => renderDeviceListItem(device, site.code || siteId, site)).join('')}
         </div>
 
         <!-- Catatan Core Section -->
@@ -172,7 +172,7 @@ export async function renderSitePage(siteId, container) {
   }
 }
 
-function renderDeviceListItem(device, siteId) {
+function renderDeviceListItem(device, siteCode, site) {
   const typeName = device.device_types?.name || 'OTHER';
   const icon  = getDeviceIcon(typeName);
   const color = getDeviceColor(typeName);
@@ -184,7 +184,7 @@ function renderDeviceListItem(device, siteId) {
   const pct    = calcPercent(filled, total);
 
   return `
-    <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteId}', deviceId:'${device.id}', deviceName:'${device.name}'})">
+    <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteCode}', deviceId:'${device.id}', deviceName:'${device.name}'})">
       <div class="device-list-item__icon" style="background:${bgColor}">
         ${icon}
       </div>
