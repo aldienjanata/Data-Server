@@ -105,7 +105,7 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  min-height: 75px;
+                  min-height: 95px;
                   border: 2px solid ${tubeColor.hex};
                   background: ${isFilled ? coreColor.hex : 'transparent'};
                   color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
@@ -118,8 +118,7 @@ export async function renderOTBView(device, container) {
                   transition: transform 0.1s;
                   opacity: ${opacity};
                   position: relative;
-                  overflow: hidden;
-                  padding: 4px 2px;
+                  padding: 6px 2px;
                   text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.5)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
                 "
                onmouseenter="this.style.transform='scale(1.12)';this.style.zIndex='10'"
@@ -129,10 +128,10 @@ export async function renderOTBView(device, container) {
             
             <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1">${p.port_number}</span>
             ${isFilled ? `
-              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;word-break:break-word;width:100%;text-align:center;padding:0 2px">
+              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:4px;line-height:1.2;word-break:break-word;width:100%;text-align:center;padding:0 2px">
                 ${formattedLabel}
-                ${p.connection_detail ? `<div style="margin-top:3px;font-weight:800;color:${coreColor.text === '#fff' ? '#fff' : '#000'}">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:2px;font-size:${Math.max(0.45, labelFontSize - 0.1)}rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)'}">${p.notes}</div>` : ''}
+                ${p.connection_detail ? `<div style="margin-top:4px;font-size:0.65rem;font-weight:800;color:${coreColor.text === '#fff' ? '#fff' : '#000'}">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:3px;font-size:0.5rem;font-weight:600;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)'}">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
