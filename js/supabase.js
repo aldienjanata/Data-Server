@@ -488,6 +488,50 @@ const OfflineQueue = {
   }
 };
 
+// =====================================================
+// SITE CORE NOTES QUERIES
+// =====================================================
+const SiteCoreNotesAPI = {
+  async getBySite(siteId) {
+    const { data, error } = await supabase
+      .from('site_core_notes')
+      .select('*')
+      .eq('site_id', siteId)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+
+  async create(noteData) {
+    const { data, error } = await supabase
+      .from('site_core_notes')
+      .insert([noteData])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id, updates) {
+    const { data, error } = await supabase
+      .from('site_core_notes')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async remove(id) {
+    const { error } = await supabase
+      .from('site_core_notes')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  }
+};
+
 export {
   initSupabase,
   AuthAPI,
@@ -498,5 +542,6 @@ export {
   PortsAPI,
   AuditAPI,
   RealtimeAPI,
-  OfflineQueue
+  OfflineQueue,
+  SiteCoreNotesAPI
 };

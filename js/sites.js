@@ -1,7 +1,7 @@
 // =====================================================
 // SITES.JS
 // =====================================================
-import { SitesAPI, DevicesAPI } from './supabase.js';
+import { SitesAPI, DevicesAPI, SiteCoreNotesAPI } from './supabase.js';
 import { getSiteColor, getSiteEmoji, getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent } from './utils.js';
 import { canEdit } from './auth.js';
 import { showToast } from './app.js';
@@ -14,7 +14,10 @@ export async function renderSitePage(siteId, container) {
     if (!site) throw new Error('Site tidak ditemukan');
     const actualSiteId = site.id;
 
-    const devices = await DevicesAPI.getBySite(actualSiteId);
+    const [devices, coreNotes] = await Promise.all([
+      DevicesAPI.getBySite(actualSiteId),
+      SiteCoreNotesAPI.getBySite(actualSiteId)
+    ]);
 
     const siteColor = getSiteColor(site.name);
     const siteEmoji = getSiteEmoji(site.name);
@@ -94,6 +97,65 @@ export async function renderSitePage(siteId, container) {
             </div>
           ` : devices.map(device => renderDeviceListItem(device, siteId)).join('')}
         </div>
+
+        <!-- Catatan Core Section -->
+        <div class="section-header" style="margin-top:var(--space-6);">
+          <div class="section-title">
+            <span class="section-title__icon">📝</span>
+            Catatan Core & ODC
+          </div>
+          ${canEdit() ? `
+            <button class="btn btn-secondary btn-sm" onclick="showAddCoreNoteModal('${actualSiteId}', '${siteId}')">
+              + Catatan
+            </button>
+          ` : ''}
+        </div>
+
+        <div class="card" style="overflow-x:auto;">
+          ${coreNotes.length === 0 ? `
+            <div class="empty-state" style="padding:var(--space-6)">
+              <div class="empty-state__icon">📝</div>
+              <div class="empty-state__title">Belum ada catatan core</div>
+              <div class="empty-state__desc">Tambahkan catatan alokasi core di lokasi ini.</div>
+            </div>
+          ` : `
+            <table style="width:100%; text-align:left; border-collapse:collapse; white-space:nowrap;">
+              <thead style="background:var(--color-bg-elevated); border-bottom:1px solid var(--color-border);">
+                <tr>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted);">OLT Port</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted);">Tube</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted);">Core</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted);">Perangkat</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted); text-align:center;">Kapasitas</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted); text-align:center;">Terpakai</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted); text-align:center;">Sisa</th>
+                  <th style="padding:12px; font-weight:600; color:var(--color-text-muted);">Keterangan</th>
+                  ${canEdit() ? '<th style="padding:12px; font-weight:600; color:var(--color-text-muted);">Aksi</th>' : ''}
+                </tr>
+              </thead>
+              <tbody>
+                ${coreNotes.map(note => `
+                  <tr>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border);">${note.olt_port || '-'}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border);">${note.tube_color || '-'}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border);">${note.core_color || '-'}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border);">${note.device_name || '-'}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border); text-align:center;">${note.capacity || 0}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border); text-align:center;">${note.used_ports || 0}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border); text-align:center;">${(note.capacity || 0) - (note.used_ports || 0)}</td>
+                    <td style="padding:12px; border-bottom:1px solid var(--color-border);">${note.description || '-'}</td>
+                    ${canEdit() ? `
+                      <td style="padding:12px; border-bottom:1px solid var(--color-border);">
+                        <button class="btn btn-ghost btn-icon-sm" onclick="deleteCoreNote('${note.id}', '${siteId}')" title="Hapus">🗑️</button>
+                      </td>
+                    ` : ''}
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `}
+        </div>
+
       </div>
     `;
 
