@@ -154,7 +154,7 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
           <span class="badge badge-${status}">${getStatusLabel(status)}</span>
         </div>
         ${colorInfoHTML}
-        ${label ? `
+        ${(label || targetDevId || detail) ? `
           <div class="connection-path">
             <div class="connection-path__node">
               <div class="connection-path__node-label">Dari</div>
@@ -165,8 +165,8 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
             <div class="connection-path__line">→</div>
             <div class="connection-path__node">
               <div class="connection-path__node-label">Ke</div>
-              <div class="connection-path__node-value" style="color:var(--color-filled)">
-                ${label}
+              <div class="connection-path__node-value" style="color:var(--color-filled);word-break:break-word;">
+                ${label || detail || 'Perangkat Terhubung'}
               </div>
               ${targetDevId ? `
                 <button type="button" onclick="goToDevice('${targetDevId}')"
