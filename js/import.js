@@ -521,18 +521,15 @@ function cancelImport() {
 // =====================================================
 // DOWNLOAD TEMPLATE
 // =====================================================
-export async function downloadTemplate() {
-  if (!window.XLSX) await loadXLSX();
+export function downloadTemplate(specificTypeName = null, specificDeviceName = null) {
+  if (!window.XLSX) {
+    showToast('Memuat library Excel...', 'info');
+    loadXLSX().then(() => downloadTemplate(specificTypeName, specificDeviceName));
+    return;
+  }
 
   const wb = XLSX.utils.book_new();
 
-  // --- Sheet 1: OTB Template ---
-  const otbData = [
-    ['DATA OTB 1 96', null, null, null, null, null, null, null, null, null, null, null, null],
-    [null],
-    ['No', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    [4, 'CORE 73', 'CORE 74', 'CORE 75', 'CORE 76', 'CORE 77', 'CORE 78', 'CORE 79', 'CORE 80', 'CORE 81', 'CORE 82', 'CORE 83', 'CORE 84'],
-    [null, '(isi tujuan)', null, null, null, null, null, null, null, null, null, null, null],
   const addOTBSheet = () => {
     const otbData = [
       [null, specificDeviceName || 'DATA OTB 1 96'],
@@ -586,22 +583,17 @@ export async function downloadTemplate() {
     XLSX.utils.book_append_sheet(wb, ws, specificDeviceName ? specificDeviceName.substring(0,31) : 'DATA GTGO-CISCO-HW');
   };
 
-  // Decide what to add based on specificTypeName
   if (!specificTypeName) {
-    // Generate ALL templates if no type specified (e.g. from Dashboard)
     addOTBSheet();
     addCiscoSheet();
     addHuaweiSheet();
     addGTGOSheet();
   } else {
-    // Generate ONLY the specific type
     if (specificTypeName === 'OTB') addOTBSheet();
     else if (specificTypeName === 'CISCO') addCiscoSheet();
     else if (specificTypeName === 'HUAWEI') addHuaweiSheet();
     else if (specificTypeName === 'GTGO' || specificTypeName === 'OLT') addGTGOSheet();
     else {
-      // Fallback for custom devices: generic GTGO-like table or generic Pair-like table
-      // Let's just use the generic Pair-like (similar to Cisco) but with the exact name
       const customData = [
         [null, specificDeviceName || specificTypeName],
         [], [],
@@ -614,7 +606,6 @@ export async function downloadTemplate() {
     }
   }
 
-  // Always add Guide sheet
   const guideData = [
     [null, 'PETUNJUK PENGISIAN TEMPLATE'],
     [],
