@@ -376,6 +376,7 @@ export async function renderGTGOView(device, container) {
             onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
             <div style="font-family:var(--font-mono);font-weight:700;font-size:0.58rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
             ${isFilled ? `<div style="font-size:0.52rem;color:#94a3b8;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;word-break:break-word">${shortConn || '—'}</div>` : ''}
+            ${p?.notes ? `<div style="font-size:0.46rem;color:#64748b;text-align:center;line-height:1.1;margin-top:2px;font-style:italic;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.notes}">${p.notes}</div>` : ''}
           </div>
         `;
       }

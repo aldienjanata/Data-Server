@@ -2,6 +2,31 @@
 // UTILS.JS - Helper Functions
 // =====================================================
 
+export const FIBER_COLORS = [
+  { name: 'Biru',   hex: '#3b82f6', text: '#fff' }, // 1
+  { name: 'Oranye', hex: '#f97316', text: '#fff' }, // 2
+  { name: 'Hijau',  hex: '#10b981', text: '#fff' }, // 3
+  { name: 'Coklat', hex: '#8b4513', text: '#fff' }, // 4
+  { name: 'Abu',    hex: '#64748b', text: '#fff' }, // 5
+  { name: 'Putih',  hex: '#ffffff', text: '#000' }, // 6
+  { name: 'Merah',  hex: '#ef4444', text: '#fff' }, // 7
+  { name: 'Hitam',  hex: '#000000', text: '#fff' }, // 8
+  { name: 'Kuning', hex: '#eab308', text: '#000' }, // 9
+  { name: 'Ungu',   hex: '#a855f7', text: '#fff' }, // 10
+  { name: 'Pink',   hex: '#ec4899', text: '#fff' }, // 11
+  { name: 'Aqua',   hex: '#06b6d4', text: '#fff' }  // 12
+];
+
+export function getCoreColorIndex(coreNumber) {
+  return (coreNumber - 1) % 12;
+}
+
+export function getTubeColorIndex(coreNumber) {
+  return Math.floor((coreNumber - 1) / 12) % 12;
+}
+
+// =====================================================
+
 // Format date to Indonesian locale
 export function formatDate(dateStr, options = {}) {
   if (!dateStr) return '-';

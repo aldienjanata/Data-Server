@@ -2,37 +2,13 @@
 // OTB.JS - OTB Visual Display Module
 // =====================================================
 import { TubesAPI, PortsAPI } from './supabase.js';
-import { formatPort, vibrate, getStatusLabel } from './utils.js';
+import { formatPort, vibrate, getStatusLabel, FIBER_COLORS, getCoreColorIndex, getTubeColorIndex } from './utils.js';
 import { showToast, showPortModal } from './app.js';
 import { canEdit } from './auth.js';
 
 // =====================================================
 // RENDER OTB DEVICE VIEW (Custom Grids)
 // =====================================================
-const FIBER_COLORS = [
-  { name: 'Biru',   hex: '#3b82f6', text: '#fff' }, // 1
-  { name: 'Oranye', hex: '#f97316', text: '#fff' }, // 2
-  { name: 'Hijau',  hex: '#10b981', text: '#fff' }, // 3
-  { name: 'Coklat', hex: '#8b4513', text: '#fff' }, // 4
-  { name: 'Abu',    hex: '#64748b', text: '#fff' }, // 5
-  { name: 'Putih',  hex: '#ffffff', text: '#000' }, // 6
-  { name: 'Merah',  hex: '#ef4444', text: '#fff' }, // 7
-  { name: 'Hitam',  hex: '#000000', text: '#fff' }, // 8
-  { name: 'Kuning', hex: '#eab308', text: '#000' }, // 9
-  { name: 'Ungu',   hex: '#a855f7', text: '#fff' }, // 10
-  { name: 'Pink',   hex: '#ec4899', text: '#fff' }, // 11
-  { name: 'Aqua',   hex: '#06b6d4', text: '#fff' }  // 12
-];
-
-function getCoreColorIndex(coreNumber) {
-  // coreNumber 1-based. Example: 1 = 0 (Biru), 12 = 11 (Aqua), 13 = 0 (Biru)
-  return (coreNumber - 1) % 12;
-}
-
-function getTubeColorIndex(coreNumber) {
-  // Tube changes every 12 cores
-  return Math.floor((coreNumber - 1) / 12) % 12;
-}
 
 export async function renderOTBView(device, container) {
   container.innerHTML = `

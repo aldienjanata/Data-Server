@@ -8,7 +8,7 @@ import { renderSitePage } from './sites.js';
 import { renderDevicePage } from './devices.js';
 import { renderSettingsPage } from './settings.js';
 import { OfflineQueue } from './supabase.js';
-import { storage, vibrate, isOnline, getDeviceIcon } from './utils.js';
+import { formatPort, vibrate, getStatusLabel, getDeviceIcon, FIBER_COLORS, getTubeColorIndex, getCoreColorIndex } from './utils.js';
 
 // =====================================================
 // APP STATE
@@ -94,6 +94,24 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
   const targetDevId = portData?.connection_target_device || '';
   const targetPortIdStr = portData?.connection_target_port || '';
 
+  let colorInfoHTML = '';
+  if (displayType === 'otb') {
+    const tubeIdx = getTubeColorIndex(portNumber);
+    const coreIdx = getCoreColorIndex(portNumber);
+    const tCol = FIBER_COLORS[tubeIdx];
+    const cCol = FIBER_COLORS[coreIdx];
+    colorInfoHTML = `
+      <div style="display:flex;gap:8px;margin-top:8px;justify-content:center;">
+        <div style="font-size:0.6rem;padding:2px 6px;border-radius:4px;background:${tCol.hex};color:${tCol.text};font-weight:600;border:1px solid rgba(0,0,0,0.1)">
+          Tube: ${tCol.name}
+        </div>
+        <div style="font-size:0.6rem;padding:2px 6px;border-radius:4px;background:${cCol.hex};color:${cCol.text};font-weight:600;border:1px solid rgba(0,0,0,0.1)">
+          Core: ${cCol.name}
+        </div>
+      </div>
+    `;
+  }
+
   const backdrop = document.createElement('div');
   backdrop.className = 'modal-backdrop';
   backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
@@ -106,16 +124,17 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
       <div class="port-detail-header">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
           <div class="port-number-badge">
-            📍 PORT ${String(portNumber).padStart(2, '0')}
+            📍 ${portLabel ? `PON ${portLabel}` : `PORT ${String(portNumber).padStart(2, '0')}`}
           </div>
           <span class="badge badge-${status}">${getStatusLabel(status)}</span>
         </div>
+        ${colorInfoHTML}
         ${label ? `
           <div class="connection-path">
             <div class="connection-path__node">
               <div class="connection-path__node-label">Dari</div>
               <div class="connection-path__node-value" style="color:var(--color-primary-light)">
-                Port ${portNumber}
+                ${portLabel ? `PON ${portLabel}` : `Port ${portNumber}`}
               </div>
             </div>
             <div class="connection-path__line">→</div>
@@ -124,6 +143,12 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
               <div class="connection-path__node-value" style="color:var(--color-filled)">
                 ${label}
               </div>
+              ${targetDevId ? `
+                <button type="button" onclick="goToDevice('${targetDevId}')"
+                        style="margin-top:8px;background:rgba(59,130,246,0.15);color:var(--color-primary);border:1px solid rgba(59,130,246,0.3);padding:4px 10px;border-radius:6px;font-size:0.65rem;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:4px">
+                  Buka Perangkat ↗
+                </button>
+              ` : ''}
             </div>
           </div>
         ` : `
@@ -278,10 +303,6 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
   }
 }
 
-function getStatusLabel(status) {
-  const map = { filled: 'Terisi', empty: 'Kosong', unverified: 'Belum Verif', reserved: 'Reservasi' };
-  return map[status] || status;
-}
 
 // =====================================================
 // SAVE PORT EDIT
@@ -335,9 +356,11 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
     if (targetPortId && targetDevId) {
       await PortsAPI.update(targetPortId, {
         connection_label: sourceLabel,
+        connection_detail: detail || null,
         connection_target_device: deviceId,
         connection_target_port: savedPort.id,
         status: status === 'empty' ? 'empty' : 'filled', // Keep synced status
+        notes: notes || null,
         updated_by: currentUser?.email || 'anonymous'
       });
     }
