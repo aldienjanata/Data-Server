@@ -88,10 +88,15 @@ export async function renderOTBView(device, container) {
       }
     }
 
+    // Dynamic cell sizing: OTB 96 (24 cols) = larger cells, OTB 144 (12 cols) = medium
+    const cellMinPx = cols >= 20 ? 64 : cols >= 12 ? 58 : 48;
+    const fontSizeNum = cols >= 20 ? '0.85' : cols >= 12 ? '0.8' : '0.72';
+    const labelFontSize = cols >= 20 ? '0.62' : cols >= 12 ? '0.55' : '0.5';
+
     // Render Grid
     let html = `
       <div class="card" style="overflow-x:auto;padding:var(--space-5)">
-        <div style="min-width:${cols * 40}px;display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:4px">
+        <div style="min-width:${cols * cellMinPx}px;display:grid;grid-template-columns:repeat(${cols}, 1fr);gap:5px">
     `;
 
     for (let r = 0; r < rowsCount; r++) {
@@ -119,31 +124,32 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                 aspect-ratio:1;
-                 border: 2px solid ${tubeColor.hex};
-                 background: ${isFilled ? coreColor.hex : 'transparent'};
-                 color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
-                 border-radius: 4px;
-                 display: flex;
-                 flex-direction: column;
-                 align-items: center;
-                 justify-content: center;
-                 font-size: 0.7rem;
-                 font-weight: 800;
-                 cursor: pointer;
-                 transition: transform 0.1s;
-                 opacity: ${opacity};
-                 position: relative;
-                 overflow: hidden;
-                 text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 2px rgba(0,0,0,0.6)' : 'none'};
-               "
-               onmouseenter="this.style.transform='scale(1.15)';this.style.zIndex='10'"
+                  aspect-ratio:1;
+                  border: 2px solid ${tubeColor.hex};
+                  background: ${isFilled ? coreColor.hex : 'transparent'};
+                  color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
+                  border-radius: 5px;
+                  display: flex;
+                  flex-direction: column;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: ${fontSizeNum}rem;
+                  font-weight: 800;
+                  cursor: pointer;
+                  transition: transform 0.1s;
+                  opacity: ${opacity};
+                  position: relative;
+                  overflow: hidden;
+                  padding: 2px;
+                  text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.5)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
+                "
+               onmouseenter="this.style.transform='scale(1.12)';this.style.zIndex='10'"
                onmouseleave="this.style.transform='scale(1)';this.style.zIndex='1'">
             
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
-            <span>${p.port_number}</span>
-            ${isFilled ? `<span style="font-size:0.5rem;font-weight:600;margin-top:1px;line-height:1;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;width:100%;text-align:center">${label}</span>` : ''}
+            <span style="line-height:1">${p.port_number}</span>
+            ${isFilled ? `<span style="font-size:${labelFontSize}rem;font-weight:700;margin-top:2px;line-height:1.1;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;width:100%;text-align:center;padding:0 1px">${label}</span>` : ''}
           </div>
         `;
       }
