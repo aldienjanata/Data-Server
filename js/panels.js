@@ -259,75 +259,78 @@ export async function renderGTGOView(device, container) {
     const totalPorts = SLOTS * PORTS_PER_SLOT;
     const pct = Math.round(filledCount / totalPorts * 100);
 
-    // Color palette per slot column for visual distinction
-    const SLOT_COLORS = [
-      '#6366f1','#8b5cf6','#ec4899','#f43f5e',
-      '#f97316','#eab308','#22c55e','#10b981',
-      '#06b6d4','#3b82f6','#6366f1','#a855f7',
-      '#e11d48','#f59e0b','#84cc16','#14b8a6'
-    ];
+    // Single accent color - professional blue
+    const ACCENT = '#3b82f6';
+    const FILLED_COLOR = '#10b981';
+    const UNVERIF_COLOR = '#f59e0b';
+    const RESERVED_COLOR = '#8b5cf6';
 
     let html = `
-      <div class="device-panel fade-in" style="overflow:hidden">
-        <!-- Header bar -->
+      <div class="device-panel fade-in" style="overflow:hidden;border-radius:var(--radius-xl);border:1px solid var(--color-border)">
+
+        <!-- Header -->
         <div style="
           display:flex;justify-content:space-between;align-items:center;
-          padding:14px 20px;
-          background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.08));
-          border-bottom:1px solid rgba(99,102,241,0.2);
+          padding:16px 20px;
+          background:rgba(59,130,246,0.06);
+          border-bottom:1px solid var(--color-border);
         ">
           <div>
-            <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--color-primary);font-weight:700;letter-spacing:0.12em;text-transform:uppercase">
-              ${device.name} &nbsp;·&nbsp; GTGO / OLT
+            <div style="font-family:var(--font-mono);font-size:0.72rem;color:${ACCENT};font-weight:700;letter-spacing:0.08em">
+              ${device.name} &nbsp;/&nbsp; GTGO OLT
             </div>
-            <div style="font-size:0.65rem;color:var(--color-text-muted);margin-top:3px">
-              Slot 3 – 18 &nbsp;|&nbsp; 8 PON per slot &nbsp;|&nbsp; Total ${totalPorts} PON
+            <div style="font-size:0.68rem;color:var(--color-text-muted);margin-top:4px">
+              Slot 3–18 &nbsp;·&nbsp; 8 PON/Slot &nbsp;·&nbsp; Total ${totalPorts} PON
             </div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:1.4rem;font-weight:800;color:var(--color-primary);line-height:1">${filledCount}</div>
-            <div style="font-size:0.6rem;color:var(--color-text-muted);margin-top:1px">PON Terisi / ${totalPorts}</div>
+          <div style="text-align:right;display:flex;align-items:center;gap:20px">
+            <div>
+              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Terisi</div>
+              <div style="font-size:1.6rem;font-weight:800;color:${FILLED_COLOR};line-height:1.1">${filledCount}</div>
+            </div>
+            <div>
+              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Kosong</div>
+              <div style="font-size:1.6rem;font-weight:800;color:var(--color-text-secondary);line-height:1.1">${totalPorts - filledCount}</div>
+            </div>
+            <div>
+              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Penggunaan</div>
+              <div style="font-size:1.6rem;font-weight:800;color:${ACCENT};line-height:1.1">${pct}%</div>
+            </div>
           </div>
         </div>
 
         <!-- Progress bar -->
-        <div style="height:4px;background:var(--color-bg-elevated)">
-          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#6366f1,#10b981);transition:width 0.6s ease"></div>
+        <div style="height:3px;background:rgba(255,255,255,0.06)">
+          <div style="height:100%;width:${pct}%;background:${FILLED_COLOR};transition:width 0.6s ease"></div>
         </div>
 
-        <!-- Grid area -->
-        <div style="overflow-x:auto;padding:16px 20px 8px">
-          <div style="display:grid;grid-template-columns:48px repeat(${SLOTS},1fr);gap:3px;min-width:${SLOTS*58+56}px">
-            <!-- Slot header row -->
-            <div style="padding:4px;display:flex;align-items:flex-end;justify-content:center">
-              <span style="font-size:0.55rem;color:var(--color-text-muted);font-family:var(--font-mono)">PON</span>
-            </div>
-            ${Array.from({length:SLOTS},(_,i) => {
+        <!-- Grid -->
+        <div style="overflow-x:auto;padding:12px 16px 0">
+          <div style="display:grid;grid-template-columns:36px repeat(${SLOTS},1fr);gap:2px;min-width:${SLOTS*54+44}px">
+
+            <!-- Slot headers -->
+            <div></div>
+            ${Array.from({length:SLOTS}, (_,i) => {
               const slotNum = START_SLOT + i;
-              const col = SLOT_COLORS[i];
               return `
                 <div style="
-                  text-align:center;padding:5px 3px;
-                  background:${col}18;
-                  border-radius:6px 6px 0 0;
-                  border-top:3px solid ${col};
+                  text-align:center;padding:4px 2px 5px;
+                  border-bottom:2px solid ${ACCENT}44;
                 ">
-                  <div style="font-size:0.58rem;font-family:var(--font-mono);color:${col};font-weight:800">S${slotNum}</div>
-                  <div style="font-size:0.5rem;color:${col}99;margin-top:1px">1/${slotNum}</div>
+                  <div style="font-size:0.6rem;font-family:var(--font-mono);color:${ACCENT};font-weight:700">S${slotNum}</div>
                 </div>
               `;
             }).join('')}
     `;
 
-    // Each port row (1-8)
+    // Port rows 1–8
     for (let port = 1; port <= PORTS_PER_SLOT; port++) {
       // Row label
       html += `
         <div style="
           display:flex;align-items:center;justify-content:center;
-          font-size:0.62rem;font-family:var(--font-mono);
-          color:var(--color-text-muted);font-weight:700;
-          padding:3px;
+          font-size:0.6rem;font-family:var(--font-mono);
+          color:var(--color-text-muted);font-weight:600;
         ">P${port}</div>
       `;
 
@@ -337,58 +340,42 @@ export async function renderGTGOView(device, container) {
         const p = portMap[label] || ports.find(px => px.port_number === calcPortNumber);
         const status = p?.status || 'empty';
         const conn = p?.connection_detail || p?.connection_label || '';
-        const shortConn = conn.length > 10 ? conn.slice(0,9)+'…' : conn;
-        const isFilled = status === 'filled';
-        const portId = p?.id || '';
-        const portNum = p?.port_number || calcPortNumber;
-        const col = SLOT_COLORS[slot];
-        const isUnverif = status === 'unverified';
+        const shortConn = conn.length > 9 ? conn.slice(0, 8) + '…' : conn;
+        const isFilled   = status === 'filled';
+        const isUnverif  = status === 'unverified';
         const isReserved = status === 'reserved';
+        const portId  = p?.id || '';
+        const portNum = p?.port_number || calcPortNumber;
 
-        let bg, border, textColor;
-        if (isFilled) {
-          bg = `${col}22`;
-          border = col;
-          textColor = col;
-        } else if (isUnverif) {
-          bg = 'rgba(234,179,8,0.08)';
-          border = '#eab308';
-          textColor = '#eab308';
-        } else if (isReserved) {
-          bg = 'rgba(139,92,246,0.08)';
-          border = '#8b5cf6';
-          textColor = '#8b5cf6';
-        } else {
-          bg = 'var(--color-bg-elevated)';
-          border = 'var(--color-border)';
-          textColor = 'var(--color-text-muted)';
-        }
+        let bg, borderColor, labelColor;
+        if (isFilled)        { bg = `rgba(16,185,129,0.14)`;  borderColor = FILLED_COLOR;   labelColor = FILLED_COLOR; }
+        else if (isUnverif)  { bg = `rgba(245,158,11,0.10)`;  borderColor = UNVERIF_COLOR;  labelColor = UNVERIF_COLOR; }
+        else if (isReserved) { bg = `rgba(139,92,246,0.10)`;  borderColor = RESERVED_COLOR; labelColor = RESERVED_COLOR; }
+        else                 { bg = `rgba(255,255,255,0.03)`;  borderColor = 'rgba(255,255,255,0.08)'; labelColor = 'var(--color-text-muted)'; }
 
         html += `
           <div
             onclick="handlePanelPortClick('${device.id}','${portId}',${portNum},'${label}')"
             id="panel-port-${device.id}-${label.replace(/\//g,'-')}"
-            title="${label}${conn ? ' → '+conn : ' (Kosong)'}"
+            title="${label}${conn ? ' → ' + conn : ' (Kosong)'}"
             data-status="${status}"
             data-label="${conn.toLowerCase()}"
             style="
-              border-radius:5px;
-              padding:5px 3px;
-              min-height:60px;
+              border-radius:4px;
+              padding:4px 2px;
+              min-height:54px;
               display:flex;flex-direction:column;
               align-items:center;justify-content:center;
-              cursor:pointer;
-              transition:all 0.15s ease;
-              background:${bg};
-              border:1.5px solid ${isFilled ? border : 'rgba(255,255,255,0.06)'};
-              position:relative;
               gap:2px;
+              cursor:pointer;
+              transition:all 0.12s ease;
+              background:${bg};
+              border:1px solid ${borderColor};
             "
-            onmouseenter="this.style.transform='scale(1.1)';this.style.zIndex='10';this.style.border='1.5px solid ${col}';this.style.boxShadow='0 4px 12px ${col}33'"
-            onmouseleave="this.style.transform='';this.style.zIndex='1';this.style.border='1.5px solid ${isFilled ? border : 'rgba(255,255,255,0.06)'}';this.style.boxShadow=''">
-            ${isFilled ? `<div style="position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:${col};box-shadow:0 0 5px ${col}"></div>` : ''}
-            <div style="font-family:var(--font-mono);font-weight:800;font-size:0.6rem;color:${textColor};letter-spacing:-0.02em">${label}</div>
-            ${isFilled ? `<div style="margin-top:1px;text-align:center;color:#e2e8f0;word-break:break-word;line-height:1.2;font-weight:600;font-size:0.55rem;max-width:100%;overflow:hidden">${shortConn || '—'}</div>` : ''}
+            onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'"
+            onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
+            <div style="font-family:var(--font-mono);font-weight:700;font-size:0.58rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
+            ${isFilled ? `<div style="font-size:0.52rem;color:#94a3b8;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;word-break:break-word">${shortConn || '—'}</div>` : ''}
           </div>
         `;
       }
@@ -399,22 +386,22 @@ export async function renderGTGOView(device, container) {
         </div>
 
         <!-- Legend -->
-        <div style="padding:12px 20px 16px;border-top:1px solid var(--color-border);display:flex;gap:20px;flex-wrap:wrap;justify-content:center">
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#6366f1;box-shadow:0 0 5px #6366f133"></div>
-            <span style="font-size:0.7rem;color:var(--color-text-muted)">Terisi</span>
+        <div style="padding:10px 16px 14px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-top:4px">
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${FILLED_COLOR}"></div>
+            <span style="font-size:0.68rem;color:var(--color-text-muted)">Terisi</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:10px;height:10px;border-radius:50%;background:var(--color-border);opacity:0.4"></div>
-            <span style="font-size:0.7rem;color:var(--color-text-muted)">Kosong</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2)"></div>
+            <span style="font-size:0.68rem;color:var(--color-text-muted)">Kosong</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#eab308"></div>
-            <span style="font-size:0.7rem;color:var(--color-text-muted)">Belum Verifikasi</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${UNVERIF_COLOR}"></div>
+            <span style="font-size:0.68rem;color:var(--color-text-muted)">Belum Verifikasi</span>
           </div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <div style="width:10px;height:10px;border-radius:50%;background:#8b5cf6"></div>
-            <span style="font-size:0.7rem;color:var(--color-text-muted)">Reservasi</span>
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${RESERVED_COLOR}"></div>
+            <span style="font-size:0.68rem;color:var(--color-text-muted)">Reservasi</span>
           </div>
         </div>
       </div>
@@ -430,5 +417,3 @@ export async function renderGTGOView(device, container) {
     container.innerHTML = `<div style="padding:40px;color:var(--color-danger)">Gagal memuat GTGO: ${err.message}</div>`;
   }
 }
-
-
