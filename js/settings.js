@@ -94,7 +94,7 @@ export async function renderSettingsPage(container) {
         <div class="settings-section__title">Tentang Aplikasi</div>
         <div class="settings-item">
           <div class="settings-item__icon" style="background:transparent;padding:0">
-            <img src="/logos/logo apk.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+            <img src="/logos/logo-apk.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
           </div>
           <div class="settings-item__content">
             <div class="settings-item__label">Server Data Manager</div>

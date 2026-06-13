@@ -221,10 +221,20 @@
   width: 64px;
   height: 64px;
   border-radius: var(--radius-xl);
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 36px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.device-detail-icon img,
+.device-detail-icon svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .device-detail-name {

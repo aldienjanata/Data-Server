@@ -23,7 +23,7 @@ export function renderLoginPage() {
       <canvas id="login-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
       <div class="login-card fade-in" style="position:relative;z-index:1;animation: floatCard 6s ease-in-out infinite;">
         <div class="login-logo">
-          <img src="/logos/logo apk.jpg" alt="Company Logo" class="login-company-logo" style="width:80px;height:auto;border-radius:20px;"
+          <img src="/logos/logo-apk.jpg" alt="Company Logo" class="login-company-logo" style="width:80px;height:auto;border-radius:20px;"
                onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='flex';">
           <div id="login-logo-fallback" style="display:none;width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);align-items:center;justify-content:center;margin:0 auto var(--space-4);">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><circle cx="7" cy="6" r="1" fill="white" stroke="none"/><circle cx="7" cy="12" r="1" fill="white" stroke="none"/></svg>

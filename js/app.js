@@ -716,7 +716,7 @@ async function initApp() {
     <aside class="app-sidebar" id="app-sidebar">
       <div class="app-sidebar__brand">
         <div class="app-sidebar__brand-logo">
-          <img src="/logos/logo apk.jpg" style="width: 24px; height: 24px; object-fit: cover; border-radius: 6px;">
+          <img src="/logos/logo-apk.jpg" style="width: 24px; height: 24px; object-fit: cover; border-radius: 6px;">
         </div>
         <div>
           <div class="app-sidebar__brand-name">ServerData</div>
