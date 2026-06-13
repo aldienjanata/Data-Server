@@ -248,8 +248,9 @@ export async function renderGTGOView(device, container) {
     const ports = await PortsAPI.getByDevice(device.id);
     const portMap = {};
     ports.forEach(p => {
-      const key = p.port_label || String(p.port_number);
-      portMap[key] = p;
+      // Index by port_label AND port_number for reliable lookup
+      if (p.port_label) portMap[p.port_label] = p;
+      portMap[String(p.port_number)] = p;
     });
 
     // Layout: slot 3-18 (16 slots) x port 1-8 (8 ports)
@@ -283,9 +284,10 @@ export async function renderGTGOView(device, container) {
       
       for (let slot = 0; slot < SLOTS; slot++) {
         const label = `1/${START_SLOT + slot}/${port}`;
-        const p = portMap[label];
+        // Look up by port_label first, then fallback sequential search
+        const p = portMap[label] || ports.find(px => px.port_label === label);
         const status = p?.status || 'empty';
-        const conn = p?.connection_label || '';
+        const conn = p?.connection_detail || p?.connection_label || '';
         const shortConn = conn.length > 9 ? conn.slice(0,8)+'…' : conn;
         const isFilled = status === 'filled';
         const portId = p?.id || '';
@@ -293,7 +295,7 @@ export async function renderGTGOView(device, container) {
 
         html += `
           <div class="panel-port ${status}"
-               onclick="handlePanelPortClick('${device.id}','${portId}',${portNum})"
+               onclick="handlePanelPortClick('${device.id}','${portId}',${portNum},'${label}')"
                id="panel-port-${device.id}-${label.replace(/\//g,'-')}"
                title="${label}${conn ? ' → '+conn : ''}"
                data-status="${status}"
@@ -332,9 +334,9 @@ export async function renderGTGOView(device, container) {
     `;
 
     container.innerHTML = html;
-    window.handlePanelPortClick = async (deviceId, portId, portNumber) => {
+    window.handlePanelPortClick = async (deviceId, portId, portNumber, portLabel) => {
       const { showPortModal } = await import('./app.js');
-      showPortModal(deviceId, portId || null, portNumber, null, 'panel');
+      showPortModal(deviceId, portId || null, portNumber, null, 'panel', portLabel || null);
     };
 
   } catch(err) {

@@ -49,7 +49,7 @@ export function showToast(message, type = 'info', duration = 3500) {
 // =====================================================
 // PORT MODAL - Edit port connection
 // =====================================================
-export async function showPortModal(deviceId, portId, portNumber, tubeId, displayType = 'otb') {
+export async function showPortModal(deviceId, portId, portNumber, tubeId, displayType = 'otb', portLabel = null) {
   // Get port data and device data
   let portData = null;
   let deviceData = null;
@@ -57,10 +57,16 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
     const { DevicesAPI } = await import('./supabase.js');
     deviceData = await DevicesAPI.getById(deviceId);
     
+    const ports = await PortsAPI.getByDevice(deviceId);
     if (portId) {
-      const ports = await PortsAPI.getByDevice(deviceId);
       portData = ports.find(p => p.id === portId);
     }
+    // For GTGO: if no portId matched but portLabel given, find by port_label
+    if (!portData && portLabel) {
+      portData = ports.find(p => p.port_label === portLabel);
+    }
+    // After finding portData, use its real id for saving
+    if (portData) portId = portData.id;
   } catch {}
 
   const isEditable = canEdit();
@@ -156,7 +162,7 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
               Batal
             </button>
             <button class="btn btn-primary" style="flex:2"
-                    onclick="savePortEdit('${deviceId}', '${portId || ''}', ${portNumber}, '${tubeId || ''}', '${displayType}')">
+                    onclick="savePortEdit('${deviceId}', '${portId || ''}', ${portNumber}, '${tubeId || ''}', '${displayType}', '${portLabel || ''}')">
               💾 Simpan
             </button>
           </div>
@@ -265,7 +271,7 @@ function getStatusLabel(status) {
 // =====================================================
 // SAVE PORT EDIT
 // =====================================================
-window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displayType) {
+window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displayType, portLabel = '') {
   const detail = document.getElementById('modal-detail').value.trim();
   const status = document.getElementById('modal-status').value;
   const notes  = document.getElementById('modal-notes').value.trim();
@@ -280,6 +286,8 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
     connection_target_port: targetPortId || null,
     status,
     notes: notes || null,
+    // Save port_label for GTGO slots (e.g. 1/3/1) so we can look them up later
+    ...(portLabel && portLabel !== 'null' ? { port_label: portLabel } : {}),
     updated_by: currentUser?.email || 'anonymous',
     last_verified_at: status === 'filled' ? new Date().toISOString() : undefined
   };
@@ -290,7 +298,10 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   try {
     const { DevicesAPI } = await import('./supabase.js');
     const currentDevice = await DevicesAPI.getById(deviceId);
-    const sourceLabel = `${currentDevice.name} Port ${portNumber}`;
+    // For GTGO/OLT, use the slot/port label (e.g. 1/3/1); otherwise use Port N
+    const sourceLabel = portLabel && portLabel !== 'null' 
+      ? `${currentDevice.name} ${portLabel}` 
+      : `${currentDevice.name} Port ${portNumber}`;
 
     let savedPort;
     if (portId) {
