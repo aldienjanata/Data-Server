@@ -416,10 +416,17 @@ const PortsAPI = {
     return data;
   },
 
-  async update(id, updates, updatedBy = 'anonymous') {
+  async update(id, updates, updatedBy = null) {
+    const finalUpdates = { ...updates };
+    if (updatedBy) {
+      finalUpdates.updated_by = updatedBy;
+    } else if (!finalUpdates.updated_by) {
+      finalUpdates.updated_by = 'anonymous';
+    }
+    
     const { data, error } = await supabase
       .from('port_connections')
-      .update({ ...updates, updated_by: updatedBy })
+      .update(finalUpdates)
       .eq('id', id)
       .select()
       .single();
