@@ -158,7 +158,7 @@ export async function renderOTBView(device, container) {
               <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;width:100%;text-align:center;padding:0 2px;word-break:break-word;">
                 ${formattedLabel}
                 ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.55rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.2">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:1px;font-size:0.44rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:2px;font-size:0.46rem;font-weight:700;font-style:italic;color:${coreColor.text === '#fff' ? '#ffffff' : '#000000'};word-break:break-word;line-height:1.2">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
