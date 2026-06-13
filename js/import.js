@@ -222,6 +222,9 @@ function parseWorkbook(wb) {
       parsePairSheet('HUAWEI', sheetName, rows, result);
     } else if (sheetName.toUpperCase().includes('GTGO') || sheetName.toUpperCase().includes('DATA')) {
       parseGTGOSheet(sheetName, rows, result);
+    } else {
+      // Fallback for custom devices: parse as a generic pair sheet
+      parsePairSheet(sheetName, sheetName, rows, result);
     }
   });
 
@@ -530,76 +533,104 @@ export async function downloadTemplate() {
     ['No', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     [4, 'CORE 73', 'CORE 74', 'CORE 75', 'CORE 76', 'CORE 77', 'CORE 78', 'CORE 79', 'CORE 80', 'CORE 81', 'CORE 82', 'CORE 83', 'CORE 84'],
     [null, '(isi tujuan)', null, null, null, null, null, null, null, null, null, null, null],
-    [3, 'CORE 49', 'CORE 50', 'CORE 51', 'CORE 52', 'CORE 53', 'CORE 54', 'CORE 55', 'CORE 56', 'CORE 57', 'CORE 58', 'CORE 59', 'CORE 60'],
-    [null, '(isi tujuan)', null, null, null, null, null, null, null, null, null, null, null],
-    [2, 'CORE 25', 'CORE 26', 'CORE 27', 'CORE 28', 'CORE 29', 'CORE 30', 'CORE 31', 'CORE 32', 'CORE 33', 'CORE 34', 'CORE 35', 'CORE 36'],
-    [null, '(isi tujuan)', null, null, null, null, null, null, null, null, null, null, null],
-    [1, 'CORE 1', 'CORE 2', 'CORE 3', 'CORE 4', 'CORE 5', 'CORE 6', 'CORE 7', 'CORE 8', 'CORE 9', 'CORE 10', 'CORE 11', 'CORE 12'],
-    [null, '(isi tujuan)', null, null, null, null, null, null, null, null, null, null, null],
-  ];
-  const wsOTB = XLSX.utils.aoa_to_sheet(otbData);
-  wsOTB['!cols'] = Array(13).fill({ wch: 18 });
-  XLSX.utils.book_append_sheet(wb, wsOTB, 'OTB 1 96');
+  const addOTBSheet = () => {
+    const otbData = [
+      [null, specificDeviceName || 'DATA OTB 1 96'],
+      [], [],
+      [null, 'NO', 'TUBE', 'CORE', 'TUJUAN'],
+      [null, 1, 'BIRU', 'BIRU', '(isi tujuan/keterangan disini)'],
+      [null, 2, 'BIRU', 'ORANYE', null]
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(otbData);
+    ws['!cols'] = Array(13).fill({ wch: 18 });
+    XLSX.utils.book_append_sheet(wb, ws, specificDeviceName ? specificDeviceName.substring(0,31) : 'OTB 1 96');
+  };
 
-  // --- Sheet 2: CISCO Template ---
-  const ciscoData = [
-    [null, 'CISCO'],
-    [], [],
-    [null, 'PORT 1 & 2', 'PORT 3 & 4', 'PORT 5 & 6', 'PORT 7 & 8', 'PORT 9 & 10', 'PORT 11 & 12'],
-    [null, '(isi koneksi)', null, null, null, null, null],
-    [null, null, null, null, null, null, null],
-  ];
-  const wsCisco = XLSX.utils.aoa_to_sheet(ciscoData);
-  wsCisco['!cols'] = Array(7).fill({ wch: 20 });
-  XLSX.utils.book_append_sheet(wb, wsCisco, 'CISCO');
+  const addCiscoSheet = () => {
+    const ciscoData = [
+      [null, specificDeviceName || 'CISCO'],
+      [], [],
+      [null, 'PORT 1 & 2', 'PORT 3 & 4', 'PORT 5 & 6', 'PORT 7 & 8', 'PORT 9 & 10', 'PORT 11 & 12'],
+      [null, '(isi koneksi)', null, null, null, null, null],
+      [null, null, null, null, null, null, null],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(ciscoData);
+    ws['!cols'] = Array(7).fill({ wch: 20 });
+    XLSX.utils.book_append_sheet(wb, ws, specificDeviceName ? specificDeviceName.substring(0,31) : 'CISCO');
+  };
 
-  // --- Sheet 3: HUAWEI Template ---
-  const huaweiData = [
-    [null, 'HUAWEI'],
-    [], [],
-    [null, 'PORT 1&2', 'PORT 3&4', 'PORT 5&6', 'PORT 7&8', 'PORT 9&10', 'PORT 11&12', 'PORT 13&14', 'PORT 15&16', 'PORT 17&18'],
-    [null, '(isi koneksi)', null, null, null, null, null, null, null, null],
-    [null, null, null, null, null, null, null, null, null, null],
-  ];
-  const wsHW = XLSX.utils.aoa_to_sheet(huaweiData);
-  wsHW['!cols'] = Array(10).fill({ wch: 20 });
-  XLSX.utils.book_append_sheet(wb, wsHW, 'HUAWEI');
+  const addHuaweiSheet = () => {
+    const huaweiData = [
+      [null, specificDeviceName || 'HUAWEI'],
+      [], [],
+      [null, 'PORT 1&2', 'PORT 3&4', 'PORT 5&6', 'PORT 7&8', 'PORT 9&10', 'PORT 11&12', 'PORT 13&14', 'PORT 15&16', 'PORT 17&18'],
+      [null, '(isi koneksi)', null, null, null, null, null, null, null, null],
+      [null, null, null, null, null, null, null, null, null, null],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(huaweiData);
+    ws['!cols'] = Array(10).fill({ wch: 20 });
+    XLSX.utils.book_append_sheet(wb, ws, specificDeviceName ? specificDeviceName.substring(0,31) : 'HUAWEI');
+  };
 
-  // --- Sheet 4: GTGO Template ---
-  const gtgoData = [
-    [null, 'DATA GTGO'],
-    [], [],
-    [null, 'OTB', 'CORE', 'KETERANGAN', 'GTGO PORT'],
-    [null, 1, 'CORE 50', '(nama lokasi)', '1/3/1'],
-    [null, 2, 'CORE 40', '(nama lokasi)', '1/3/2'],
-    [null, '(No OTB)', '(No Core)', '(Tujuan/Keterangan)', '(Slot/Port/Channel)'],
-  ];
-  const wsGTGO = XLSX.utils.aoa_to_sheet(gtgoData);
-  wsGTGO['!cols'] = [{ wch: 4 }, { wch: 8 }, { wch: 12 }, { wch: 28 }, { wch: 14 }];
-  XLSX.utils.book_append_sheet(wb, wsGTGO, 'DATA GTGO-CISCO-HW');
+  const addGTGOSheet = () => {
+    const gtgoData = [
+      [null, specificDeviceName ? `DATA ${specificDeviceName}` : 'DATA GTGO'],
+      [], [],
+      [null, 'OTB', 'CORE', 'KETERANGAN', 'GTGO PORT'],
+      [null, 1, 'CORE 50', '(nama lokasi)', '1/3/1'],
+      [null, 2, 'CORE 40', '(nama lokasi)', '1/3/2'],
+      [null, '(No OTB)', '(No Core)', '(Tujuan/Keterangan)', '(Slot/Port/Channel)'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(gtgoData);
+    ws['!cols'] = [{ wch: 4 }, { wch: 8 }, { wch: 12 }, { wch: 28 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws, specificDeviceName ? specificDeviceName.substring(0,31) : 'DATA GTGO-CISCO-HW');
+  };
 
-  // --- Sheet 5: Petunjuk ---
+  // Decide what to add based on specificTypeName
+  if (!specificTypeName) {
+    // Generate ALL templates if no type specified (e.g. from Dashboard)
+    addOTBSheet();
+    addCiscoSheet();
+    addHuaweiSheet();
+    addGTGOSheet();
+  } else {
+    // Generate ONLY the specific type
+    if (specificTypeName === 'OTB') addOTBSheet();
+    else if (specificTypeName === 'CISCO') addCiscoSheet();
+    else if (specificTypeName === 'HUAWEI') addHuaweiSheet();
+    else if (specificTypeName === 'GTGO' || specificTypeName === 'OLT') addGTGOSheet();
+    else {
+      // Fallback for custom devices: generic GTGO-like table or generic Pair-like table
+      // Let's just use the generic Pair-like (similar to Cisco) but with the exact name
+      const customData = [
+        [null, specificDeviceName || specificTypeName],
+        [], [],
+        [null, 'PORT 1', 'PORT 2', 'PORT 3', 'PORT 4', 'PORT 5', 'PORT 6', 'PORT 7', 'PORT 8'],
+        [null, '(isi koneksi)', null, null, null, null, null, null, null],
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(customData);
+      ws['!cols'] = Array(9).fill({ wch: 20 });
+      XLSX.utils.book_append_sheet(wb, ws, (specificDeviceName || specificTypeName).substring(0,31));
+    }
+  }
+
+  // Always add Guide sheet
   const guideData = [
-    ['PETUNJUK PENGISIAN TEMPLATE SERVER DATA MANAGER'],
-    [],
-    ['Sheet', 'Penjelasan'],
-    ['OTB 1 96', 'Data OTB 1 berkapasitas 96 core. Isi keterangan di baris setelah CORE label.'],
-    ['CISCO', 'Data Switch Cisco. PORT dalam format pasangan (PORT 1 & 2).'],
-    ['HUAWEI', 'Data Perangkat Huawei. PORT dalam format pasangan.'],
-    ['DATA GTGO-CISCO-HW', 'Pemetaan port GTGO berformat Slot/Port/Channel (1/3/1).'],
+    [null, 'PETUNJUK PENGISIAN TEMPLATE'],
     [],
     ['Catatan Penting:'],
     ['- Jangan mengubah struktur baris/kolom template'],
-    ['- Isi keterangan/tujuan di baris setelah label CORE'],
+    ['- Isi keterangan/tujuan di sel di bawah label PORT'],
     ['- Kosongkan sel jika port tidak digunakan'],
-    ['- Nama sheet HARUS mengandung: OTB, CISCO, HUAWEI, atau GTGO'],
+    ['- Nama sheet HARUS mengandung: OTB, CISCO, HUAWEI, GTGO, atau sama dengan nama perangkat'],
   ];
   const wsGuide = XLSX.utils.aoa_to_sheet(guideData);
   wsGuide['!cols'] = [{ wch: 28 }, { wch: 60 }];
   XLSX.utils.book_append_sheet(wb, wsGuide, 'PETUNJUK');
 
-  XLSX.writeFile(wb, 'Template_ServerData.xlsx');
-  addLog('📋 Template Excel berhasil diunduh: Template_ServerData.xlsx');
+  const fileName = specificDeviceName ? `Template_${specificDeviceName.replace(/[^a-zA-Z0-9_-]/g, '_')}.xlsx` : 'Template_ServerData.xlsx';
+  XLSX.writeFile(wb, fileName);
+  addLog(`📋 Template Excel berhasil diunduh: ${fileName}`);
   showToast('Template berhasil diunduh', 'success');
 }
 

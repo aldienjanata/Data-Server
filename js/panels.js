@@ -78,7 +78,7 @@ export async function renderPanelView(device, container) {
             <div style="
               font-size:0.6rem;color:var(--color-text-muted);
               font-family:var(--font-mono);
-            ">${ports.filter(p => p.status === 'filled').length}/${ports.length} PORT TERISI</div>
+            ">${ports.filter(p => p.status === 'filled').length}/${layout.reduce((acc, r) => acc + r.ports.length, 0)} PORT TERISI</div>
           </div>
 
           <!-- LED strip -->

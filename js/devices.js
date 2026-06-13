@@ -30,17 +30,17 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
     // Get stats
     const stats = await PortsAPI.getStats(deviceId);
     
-    // Calculate actual totals
-    let actualTotal = device.total_ports || stats.total;
-    if (!device.total_ports) {
-      if (typeName === 'GTGO' || typeName === 'OLT') actualTotal = Math.max(actualTotal, 128);
-      else if (typeName === 'CISCO') actualTotal = Math.max(actualTotal, 48);
-      else if (typeName === 'HUAWEI') actualTotal = Math.max(actualTotal, 56);
-      else if (typeName === 'OTB') {
-        const is144 = device.model?.includes('144') || device.name?.includes('144') || stats.total === 144;
-        actualTotal = Math.max(actualTotal, is144 ? 144 : 96);
-      }
+    // Calculate actual totals — always enforce hardware minimum as floor
+    // (device.total_ports in DB may be stale/wrong, hardware capacity is the truth)
+    let actualTotal = device.total_ports || stats.total || 0;
+    if (typeName === 'GTGO' || typeName === 'OLT') actualTotal = Math.max(actualTotal, 128);
+    else if (typeName === 'CISCO')  actualTotal = Math.max(actualTotal, 48);
+    else if (typeName === 'HUAWEI') actualTotal = Math.max(actualTotal, 56);
+    else if (typeName === 'OTB') {
+      const is144 = device.model?.includes('144') || device.name?.includes('144') || stats.total >= 140;
+      actualTotal = Math.max(actualTotal, is144 ? 144 : 96);
     }
+    if (actualTotal === 0) actualTotal = stats.total || 1;
     
     const pct = calcPercent(stats.filled, actualTotal);
     const actualEmpty = Math.max(0, actualTotal - stats.filled - (stats.unverified || 0) - (stats.reserved || 0));
@@ -76,14 +76,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           ` : ''}
         </div>
         
-        <!-- Import / Export Actions -->
-        ${canEdit() ? `
-        <div style="display:flex;gap:8px;margin-bottom:var(--space-4)">
-          <input type="file" id="device-import-file" accept=".xlsx,.xls" style="display:none" onchange="handleDeviceImportFile(event, '${deviceId}', '${device.site_id}', '${typeName}')">
-          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('device-import-file').click()">📥 Import Port</button>
-          <button class="btn btn-ghost btn-sm" onclick="handleDownloadTemplate()">📋 Template Excel</button>
-        </div>
-        ` : ''}
 
         <!-- Stats Row -->
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-3);margin-bottom:var(--space-5)">
@@ -121,8 +113,17 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
 
         <!-- Action Buttons -->
         <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);flex-wrap:wrap">
+          ${canEdit() ? `
+          <input type="file" id="device-import-file" accept=".xlsx,.xls" style="display:none" onchange="handleDeviceImportFile(event, '${deviceId}', '${device.site_id}', '${typeName}')">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('device-import-file').click()">
+            📥 Import Port
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="handleDownloadTemplate('${typeName}', '${device.name}')">
+            📋 Template Excel
+          </button>
+          ` : ''}
           <button class="btn btn-secondary btn-sm" onclick="exportDevice('${deviceId}','${typeName}','${device.name}')">
-            📥 Export
+            📤 Export
           </button>
           <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
             📋 Riwayat
@@ -318,9 +319,9 @@ window.saveDevice = function() {};  // defined below
 window.showEditLayoutModal = function(deviceId, typeName) { showEditLayoutModal(deviceId, typeName); };
 window.saveDeviceLayout = function(deviceId, btn) { saveDeviceLayout(deviceId, btn); };
 window.handleDeviceImportFile = function(event, deviceId, siteId, typeName) { handleDeviceImportFile(event, deviceId, siteId, typeName); };
-window.handleDownloadTemplate = async () => {
+window.handleDownloadTemplate = async (typeName, deviceName) => {
   const imp = await import('./import.js');
-  if (imp.downloadTemplate) imp.downloadTemplate();
+  if (imp.downloadTemplate) imp.downloadTemplate(typeName, deviceName);
 };
 
 // =====================================================

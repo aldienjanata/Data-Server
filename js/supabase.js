@@ -154,7 +154,7 @@ const SitesAPI = {
       else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 48);
       else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
       else if (typeName === 'OTB') {
-        const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+        const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
         devTotal = Math.max(devTotal, is144 ? 144 : 96);
       }
       

@@ -34,7 +34,7 @@ export async function renderSitePage(siteId, container) {
       else if (typeName === 'CISCO') total = Math.max(total, 48);
       else if (typeName === 'HUAWEI') total = Math.max(total, 56);
       else if (typeName === 'OTB') {
-        const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length === 144;
+        const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length >= 140;
         total = Math.max(total, is144 ? 144 : 96);
       }
       
@@ -197,7 +197,7 @@ function renderDeviceListItem(device, siteCode, site) {
   else if (typeName === 'CISCO') total = Math.max(total, 48);
   else if (typeName === 'HUAWEI') total = Math.max(total, 56);
   else if (typeName === 'OTB') {
-    const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length === 144;
+    const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
     total = Math.max(total, is144 ? 144 : 96);
   }
   
