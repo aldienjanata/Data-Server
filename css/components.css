@@ -597,9 +597,9 @@
 }
 
 .panel-port {
-  width: 48px;
-  height: 44px;
-  border-radius: 5px;
+  width: 60px;
+  height: 56px;
+  border-radius: 6px;
   border: 1px solid transparent;
   display: flex;
   flex-direction: column;
@@ -637,17 +637,17 @@
 
 .panel-port__num {
   font-family: var(--font-mono);
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   color: var(--color-text-muted);
   font-weight: 600;
 }
 
 .panel-port__label {
-  font-size: 0.5rem;
+  font-size: 0.55rem;
   color: var(--color-filled);
   text-align: center;
-  line-height: 1.1;
-  max-width: 44px;
+  line-height: 1.15;
+  max-width: 56px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
