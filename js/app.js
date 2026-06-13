@@ -47,6 +47,24 @@ export function showToast(message, type = 'info', duration = 3500) {
 }
 
 // =====================================================
+// GO TO DEVICE HELPER
+// =====================================================
+window.goToDevice = async function(deviceId) {
+  try {
+    const { DevicesAPI } = await import('./supabase.js');
+    const dev = await DevicesAPI.getById(deviceId);
+    if (dev && dev.site_id) {
+      document.querySelector('.modal-backdrop')?.remove();
+      setTimeout(() => {
+        Router.navigate('device', { siteId: dev.site_id, deviceId: dev.id, deviceName: dev.name });
+      }, 100);
+    }
+  } catch (err) {
+    console.error('Failed to jump to device', err);
+  }
+};
+
+// =====================================================
 // PORT MODAL - Edit port connection
 // =====================================================
 export async function showPortModal(deviceId, portId, portNumber, tubeId, displayType = 'otb', portLabel = null) {
@@ -277,6 +295,7 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       option.value = p.id;
       // Also store port number as data attribute to build the label later
       option.dataset.port = p.port_number;
+      option.dataset.portLabel = p.port_label || '';
       // Show if it's filled
       const statusIcon = p.status === 'filled' ? '🔴' : '🟢';
       const labelStr = p.port_label ? p.port_label : `Port ${p.port_number}`;
@@ -315,8 +334,19 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   const targetDevId = document.getElementById('modal-target-device')?.value;
   const targetPortId = document.getElementById('modal-target-port')?.value;
 
+  const targetDevSelect = document.getElementById('modal-target-device');
+  const targetPortSelect = document.getElementById('modal-target-port');
+  
+  let targetLabelToSave = null;
+  if (targetDevSelect && targetDevSelect.selectedIndex > 0 && targetPortSelect && targetPortSelect.selectedIndex > 0) {
+    const targetDevName = targetDevSelect.options[targetDevSelect.selectedIndex].text;
+    const pOption = targetPortSelect.options[targetPortSelect.selectedIndex];
+    const tPortLabel = pOption.dataset.portLabel || `Port ${pOption.dataset.port}`;
+    targetLabelToSave = `${targetDevName} ${tPortLabel}`;
+  }
+
   const updates = {
-    connection_label:  null,
+    connection_label:  targetLabelToSave || null,
     connection_detail: detail || null,
     connection_target_device: targetDevId || null,
     connection_target_port: targetPortId || null,
