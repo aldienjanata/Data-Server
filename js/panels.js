@@ -295,20 +295,6 @@ export async function renderGTGOView(device, container) {
               Slot 3–18 &nbsp;·&nbsp; 8 PON/Slot &nbsp;·&nbsp; Total ${totalPorts} PON
             </div>
           </div>
-          <div style="text-align:right;display:flex;align-items:center;gap:20px">
-            <div>
-              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Terisi</div>
-              <div style="font-size:1.6rem;font-weight:800;color:${FILLED_COLOR};line-height:1.1">${filledCount}</div>
-            </div>
-            <div>
-              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Kosong</div>
-              <div style="font-size:1.6rem;font-weight:800;color:var(--color-text-secondary);line-height:1.1">${totalPorts - filledCount}</div>
-            </div>
-            <div>
-              <div style="font-size:0.6rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.05em">Penggunaan</div>
-              <div style="font-size:1.6rem;font-weight:800;color:${ACCENT};line-height:1.1">${pct}%</div>
-            </div>
-          </div>
         </div>
 
         <!-- Progress bar -->
@@ -360,9 +346,9 @@ export async function renderGTGOView(device, container) {
         const portNum = p?.port_number || calcPortNumber;
 
         let bg, borderColor, labelColor;
-        if (isFilled)        { bg = `rgba(16,185,129,0.14)`;  borderColor = FILLED_COLOR;   labelColor = FILLED_COLOR; }
-        else if (isUnverif)  { bg = `rgba(245,158,11,0.10)`;  borderColor = UNVERIF_COLOR;  labelColor = UNVERIF_COLOR; }
-        else if (isReserved) { bg = `rgba(139,92,246,0.10)`;  borderColor = RESERVED_COLOR; labelColor = RESERVED_COLOR; }
+        if (isFilled)        { bg = `rgba(16,185,129,0.14)`;  borderColor = FILLED_COLOR;   labelColor = '#ffffff'; }
+        else if (isUnverif)  { bg = `rgba(245,158,11,0.10)`;  borderColor = UNVERIF_COLOR;  labelColor = '#ffffff'; }
+        else if (isReserved) { bg = `rgba(139,92,246,0.10)`;  borderColor = RESERVED_COLOR; labelColor = '#ffffff'; }
         else                 { bg = `rgba(255,255,255,0.04)`;  borderColor = 'rgba(255,255,255,0.15)'; labelColor = 'rgba(255,255,255,0.55)'; }
 
         html += `
@@ -374,11 +360,11 @@ export async function renderGTGOView(device, container) {
             data-label="${conn.toLowerCase()}"
             style="
               border-radius:4px;
-              padding:4px 2px;
-              min-height:56px;
+              padding:6px 4px;
+              min-height:60px;
               display:flex;flex-direction:column;
               align-items:center;justify-content:center;
-              gap:3px;
+              gap:4px;
               cursor:pointer;
               transition:all 0.12s ease;
               background:${bg};
@@ -386,8 +372,8 @@ export async function renderGTGOView(device, container) {
             "
             onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'"
             onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
-            <div style="font-family:var(--font-mono);font-weight:700;font-size:0.6rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
-            ${isFilled ? `<div style="font-size:0.55rem;color:#cbd5e1;text-align:center;line-height:1.2;max-width:100%;overflow:hidden;word-break:break-word">${shortConn || '—'}</div>` : ''}
+            <div style="font-family:var(--font-mono);font-weight:800;font-size:0.65rem;color:${labelColor};line-height:1.1;text-align:center">${label}</div>
+            ${isFilled ? `<div style="font-size:0.55rem;color:#e2e8f0;text-align:center;line-height:1.2;width:100%;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${conn || '—'}</div>` : ''}
             ${p?.notes ? `<div style="font-size:0.46rem;color:#64748b;text-align:center;line-height:1.1;margin-top:2px;font-style:italic;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${p.notes}">${p.notes}</div>` : ''}
           </div>
         `;
