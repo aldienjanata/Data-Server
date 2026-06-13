@@ -8,7 +8,7 @@ import { renderSitePage } from './sites.js';
 import { renderDevicePage } from './devices.js';
 import { renderSettingsPage } from './settings.js';
 import { OfflineQueue } from './supabase.js';
-import { formatPort, vibrate, getStatusLabel, getDeviceIcon, FIBER_COLORS, getTubeColorIndex, getCoreColorIndex } from './utils.js';
+import { storage, isOnline, formatPort, vibrate, getStatusLabel, getDeviceIcon, FIBER_COLORS, getTubeColorIndex, getCoreColorIndex } from './utils.js';
 
 // =====================================================
 // APP STATE
