@@ -107,6 +107,22 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
     }
     // After finding portData, use its real id for saving
     if (portData) portId = portData.id;
+    
+    // If this port's detail is empty but it's linked to another port,
+    // fetch the target port's data to auto-fill connection_detail and notes
+    if (portData?.connection_target_port && (!portData.connection_detail || !portData.notes)) {
+      try {
+        const targetPort = await PortsAPI.getById(portData.connection_target_port).catch(() => null);
+        if (targetPort) {
+          if (!portData.connection_detail && targetPort.connection_detail) {
+            portData = { ...portData, connection_detail: targetPort.connection_detail };
+          }
+          if (!portData.notes && targetPort.notes) {
+            portData = { ...portData, notes: targetPort.notes };
+          }
+        }
+      } catch {}
+    }
   } catch {}
 
   const isEditable = canEdit();

@@ -406,6 +406,16 @@ const PortsAPI = {
     return data;
   },
 
+  async getById(portId) {
+    const { data, error } = await supabase
+      .from('port_connections')
+      .select('*')
+      .eq('id', portId)
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
   async update(id, updates, updatedBy = 'anonymous') {
     const { data, error } = await supabase
       .from('port_connections')
