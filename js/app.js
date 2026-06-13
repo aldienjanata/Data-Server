@@ -239,7 +239,9 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       option.dataset.port = p.port_number;
       // Show if it's filled
       const statusIcon = p.status === 'filled' ? '🔴' : '🟢';
-      option.textContent = `${statusIcon} Port ${p.port_number} ${p.connection_label ? '('+p.connection_label+')' : ''}`;
+      const labelStr = p.port_label ? p.port_label : `Port ${p.port_number}`;
+      const connStr = p.connection_label ? ` (${p.connection_label})` : ' (KOSONG)';
+      option.textContent = `${statusIcon} ${labelStr}${connStr}`;
       if (p.id === targetPortId) option.selected = true;
       select.appendChild(option);
     });
