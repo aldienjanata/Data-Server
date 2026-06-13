@@ -123,11 +123,13 @@ export async function renderOTBView(device, container) {
           <div class="otb-grid-cell" 
                onclick="handlePortClick('${device.id}', '${p.id || ''}', ${p.port_number})"
                id="port-cell-${p.id || p.port_number}"
-               title="Port: ${p.port_number}\nCore: ${cn} (${tubeColor.name}/${coreColor.name})\n${label || 'Kosong'}"
+               title="Port: ${p.port_number}\nCore: ${cn} (${tubeColor.name}/${coreColor.name})\n${label || 'Kosong'}${p.connection_detail ? '\n' + p.connection_detail : ''}${p.notes ? '\n' + p.notes : ''}"
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  min-height: 95px;
+                  height: 90px;
+                  box-sizing: border-box;
+                  overflow: hidden;
                   border: 2px solid ${tubeColor.hex};
                   background: ${isFilled ? coreColor.hex : 'transparent'};
                   color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
@@ -135,25 +137,25 @@ export async function renderOTBView(device, container) {
                   display: flex;
                   flex-direction: column;
                   align-items: center;
-                  justify-content: center;
+                  justify-content: flex-start;
+                  padding-top: 8px;
                   cursor: pointer;
                   transition: transform 0.1s;
                   opacity: ${opacity};
                   position: relative;
-                  padding: 6px 2px;
-                  text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.5)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
+                  text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
                 "
                onmouseenter="this.style.transform='scale(1.12)';this.style.zIndex='10'"
                onmouseleave="this.style.transform='scale(1)';this.style.zIndex='1'">
             
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
-            <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1">${p.port_number}</span>
+            <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1;flex-shrink:0">${p.port_number}</span>
             ${isFilled ? `
-              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:4px;line-height:1.2;word-break:break-word;width:100%;text-align:center;padding:0 2px">
-                ${formattedLabel}
-                ${p.connection_detail ? `<div style="margin-top:4px;font-size:0.65rem;font-weight:800;color:${coreColor.text === '#fff' ? '#fff' : '#000'}">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:3px;font-size:0.5rem;font-weight:600;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)'}">${p.notes}</div>` : ''}
+              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.15;width:100%;text-align:center;padding:0 2px;overflow:hidden;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
+                <div style="overflow:hidden;width:100%">${formattedLabel}</div>
+                ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.56rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};overflow:hidden;width:100%;text-overflow:ellipsis;white-space:nowrap">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:1px;font-size:0.45rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};overflow:hidden;width:100%;text-overflow:ellipsis;white-space:nowrap">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
