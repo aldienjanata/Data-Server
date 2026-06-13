@@ -90,7 +90,12 @@ export async function renderOTBView(device, container) {
         const opacity = isFilled ? '1' : '0.4';
         
         const label = p.connection_label || '';
-        const shortLabel = label.length > 5 ? label.slice(0, 5) : label;
+        let formattedLabel = label;
+        if (label.includes(' 1/')) {
+          formattedLabel = label.replace(' 1/', '<br>1/');
+        } else if (label.includes(' Port ')) {
+          formattedLabel = label.replace(' Port ', '<br>Port ');
+        }
 
         html += `
           <div class="otb-grid-cell" 
@@ -100,7 +105,7 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  aspect-ratio:1;
+                  min-height: 75px;
                   border: 2px solid ${tubeColor.hex};
                   background: ${isFilled ? coreColor.hex : 'transparent'};
                   color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
@@ -109,14 +114,12 @@ export async function renderOTBView(device, container) {
                   flex-direction: column;
                   align-items: center;
                   justify-content: center;
-                  font-size: ${fontSizeNum}rem;
-                  font-weight: 800;
                   cursor: pointer;
                   transition: transform 0.1s;
                   opacity: ${opacity};
                   position: relative;
                   overflow: hidden;
-                  padding: 2px;
+                  padding: 4px 2px;
                   text-shadow: ${isFilled && coreColor.text === '#fff' ? '0 1px 4px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.5)' : isFilled ? '0 1px 2px rgba(255,255,255,0.8)' : 'none'};
                 "
                onmouseenter="this.style.transform='scale(1.12)';this.style.zIndex='10'"
@@ -124,8 +127,14 @@ export async function renderOTBView(device, container) {
             
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
-            <span style="line-height:1">${p.port_number}</span>
-            ${isFilled ? `<span style="font-size:${labelFontSize}rem;font-weight:700;margin-top:2px;line-height:1.1;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;width:100%;text-align:center;padding:0 1px">${label}</span>` : ''}
+            <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1">${p.port_number}</span>
+            ${isFilled ? `
+              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;word-break:break-word;width:100%;text-align:center;padding:0 2px">
+                ${formattedLabel}
+                ${p.connection_detail ? `<div style="margin-top:3px;font-weight:800;color:${coreColor.text === '#fff' ? '#fff' : '#000'}">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:2px;font-size:${Math.max(0.45, labelFontSize - 0.1)}rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)'}">${p.notes}</div>` : ''}
+              </div>
+            ` : ''}
           </div>
         `;
       }
