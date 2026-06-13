@@ -19,6 +19,28 @@ export async function renderOTBView(device, container) {
 
   try {
     const allPorts = await PortsAPI.getByDevice(device.id);
+    
+    // ── Enrich: for filled ports that link to another port but have no local detail/notes,
+    //    fetch the target port's data so the cell displays the full info
+    const filledWithTarget = allPorts.filter(p =>
+      p.status === 'filled' && p.connection_target_port && (!p.connection_detail || !p.notes)
+    );
+    if (filledWithTarget.length > 0) {
+      const fetches = filledWithTarget.map(p =>
+        PortsAPI.getById(p.connection_target_port).catch(() => null)
+      );
+      const targetPorts = await Promise.all(fetches);
+      targetPorts.forEach((tp, idx) => {
+        if (!tp) return;
+        const p = filledWithTarget[idx];
+        const portInArray = allPorts.find(x => x.id === p.id);
+        if (portInArray) {
+          if (!portInArray.connection_detail && tp.connection_detail) portInArray.connection_detail = tp.connection_detail;
+          if (!portInArray.notes && tp.notes) portInArray.notes = tp.notes;
+        }
+      });
+    }
+    
     const otbContainer = document.getElementById('otb-container');
     
     // Determine layout
