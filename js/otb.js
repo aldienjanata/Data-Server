@@ -127,9 +127,8 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  height: 90px;
-                  box-sizing: border-box;
-                  overflow: hidden;
+                  aspect-ratio: 1 / 1;
+                  min-height: 54px;
                   border: 2px solid ${tubeColor.hex};
                   background: ${isFilled ? coreColor.hex : 'transparent'};
                   color: ${isFilled ? coreColor.text : 'var(--color-text-secondary)'};
@@ -137,8 +136,9 @@ export async function renderOTBView(device, container) {
                   display: flex;
                   flex-direction: column;
                   align-items: center;
-                  justify-content: flex-start;
-                  padding-top: 8px;
+                  justify-content: center;
+                  padding: 4px 2px;
+                  box-sizing: border-box;
                   cursor: pointer;
                   transition: transform 0.1s;
                   opacity: ${opacity};
@@ -150,12 +150,12 @@ export async function renderOTBView(device, container) {
             
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
-            <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1;flex-shrink:0">${p.port_number}</span>
+            <span style="font-size:${fontSizeNum}rem;font-weight:800;line-height:1">${p.port_number}</span>
             ${isFilled ? `
-              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.15;width:100%;text-align:center;padding:0 2px;overflow:hidden;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;">
-                <div style="overflow:hidden;width:100%">${formattedLabel}</div>
-                ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.56rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};overflow:hidden;width:100%;text-overflow:ellipsis;white-space:nowrap">${p.connection_detail}</div>` : ''}
-                ${p.notes ? `<div style="margin-top:1px;font-size:0.45rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};overflow:hidden;width:100%;text-overflow:ellipsis;white-space:nowrap">${p.notes}</div>` : ''}
+              <div style="font-size:${labelFontSize}rem;font-weight:700;margin-top:3px;line-height:1.2;width:100%;text-align:center;padding:0 2px;">
+                ${formattedLabel}
+                ${p.connection_detail ? `<div style="margin-top:2px;font-size:0.52rem;font-weight:700;color:${coreColor.text === '#fff' ? '#fff' : '#000'};word-break:break-word;line-height:1.1">${p.connection_detail}</div>` : ''}
+                ${p.notes ? `<div style="margin-top:1px;font-size:0.42rem;font-weight:500;font-style:italic;color:${coreColor.text === '#fff' ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.65)'};word-break:break-word;line-height:1.1">${p.notes}</div>` : ''}
               </div>
             ` : ''}
           </div>
