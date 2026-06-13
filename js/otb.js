@@ -143,7 +143,7 @@ export async function renderOTBView(device, container) {
             ${!isFilled ? `<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${coreColor.hex}"></div>` : ''}
             
             <span>${p.port_number}</span>
-            ${isFilled ? `<span style="font-size:0.55rem;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center">${shortLabel}</span>` : ''}
+            ${isFilled ? `<span style="font-size:0.5rem;font-weight:600;margin-top:1px;line-height:1;word-break:break-word;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;width:100%;text-align:center">${label}</span>` : ''}
           </div>
         `;
       }

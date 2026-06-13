@@ -403,6 +403,9 @@ const Router = {
       } else if (params.deviceId) {
         hash += `/${params.deviceId}`;
       }
+      if (params.portId) {
+        hash += `?port=${params.portId}`;
+      }
     }
     
     history.pushState({ page, params }, '', hash);
@@ -424,10 +427,16 @@ const Router = {
   },
 
   handleHashChange() {
-    const hash = location.hash.slice(2); // remove '#/'
-    const parts = hash.split('/');
-    const page = parts[0] || 'dashboard';
+    const rawHash = window.location.hash.slice(1) || '/dashboard';
+    const [pathPart, queryPart] = rawHash.split('?');
+    const parts = pathPart.split('/').filter(Boolean);
+    const page = parts[0];
+
     const params = {};
+    if (queryPart && queryPart.startsWith('port=')) {
+      params.portId = queryPart.split('=')[1];
+    }
+
     if (page === 'site') {
       params.siteId = parts[1];
     } else if (page === 'device') {
@@ -475,7 +484,8 @@ async function renderSiteRoute(params) {
 async function renderDeviceRoute(params) {
   showBottomNav();
   setPageContent('<div class="page-content"><div class="skeleton" style="height:500px;border-radius:var(--radius-xl)"></div></div>');
-  await renderDevicePage(params.deviceId, params.siteId, document.querySelector('.page-content'));
+  const { renderDevicePage } = await import('./devices.js');
+  await renderDevicePage(params.deviceId, params.siteId, document.querySelector('.page-content'), params.deviceName, params.portId);
 }
 
 // Search route removed

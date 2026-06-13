@@ -4,11 +4,11 @@
 import { DevicesAPI, PortsAPI, AuditAPI } from './supabase.js';
 import { getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent, getStatusLabel, timeAgo, exportCSV } from './utils.js';
 import { canEdit, isAdmin } from './auth.js';
-import { showToast } from './app.js';
+import { showToast, showPortModal } from './app.js';
 import { renderOTBView, exportOTBData } from './otb.js';
 import { renderPanelView, renderGTGOView } from './panels.js';
 
-export async function renderDevicePage(deviceId, siteId, container, deviceName) {
+export async function renderDevicePage(deviceId, siteId, container, deviceName, autoOpenPortId = null) {
   try {
     let device;
     if (!deviceId && siteId && deviceName) {
@@ -140,6 +140,19 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName) 
 
     // Load recent audit
     loadRecentAudit(deviceId);
+
+    // Auto-open modal if portId is provided
+    if (autoOpenPortId) {
+      setTimeout(async () => {
+        // Find the port to get its number and tube_id
+        const ports = await PortsAPI.getByDevice(deviceId);
+        const p = ports.find(x => x.id === autoOpenPortId);
+        if (p) {
+          const displayType = typeName === 'OTB' ? 'otb' : 'panel';
+          showPortModal(deviceId, p.id, p.port_number, p.tube_id || null, displayType);
+        }
+      }, 500); // short delay to allow views to render
+    }
 
   } catch (err) {
     console.error('[Device] Error:', err);
