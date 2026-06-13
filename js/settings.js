@@ -89,24 +89,13 @@ export async function renderSettingsPage(container) {
         </div>
       </div>
 
-      <!-- Supabase Config -->
-      <div class="settings-section">
-        <div class="settings-section__title">Konfigurasi Backend</div>
-        <div class="settings-item" onclick="showSupabaseConfig()">
-          <div class="settings-item__icon" style="background:rgba(16,185,129,0.12)">🗄️</div>
-          <div class="settings-item__content">
-            <div class="settings-item__label">Supabase Config</div>
-            <div class="settings-item__desc">URL & API Key Supabase</div>
-          </div>
-          <span class="settings-item__right">›</span>
-        </div>
-      </div>
-
       <!-- About -->
       <div class="settings-section">
         <div class="settings-section__title">Tentang Aplikasi</div>
         <div class="settings-item">
-          <div class="settings-item__icon" style="background:rgba(59,130,246,0.12)">🖥️</div>
+          <div class="settings-item__icon" style="background:transparent;padding:0">
+            <img src="/logos/logo apk.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+          </div>
           <div class="settings-item__content">
             <div class="settings-item__label">Server Data Manager</div>
             <div class="settings-item__desc">v1.0.0 — Sistem manajemen port jaringan multi-site</div>

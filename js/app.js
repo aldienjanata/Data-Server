@@ -721,6 +721,12 @@ async function initApp() {
           <span class="app-sidebar__item-icon">📋</span> Riwayat
         </button>
       </div>
+      
+      <div class="app-sidebar__section" id="sidebar-sites-section" style="margin-top:var(--space-2)">
+        <div class="app-sidebar__section-label">Lokasi & Perangkat</div>
+        <div id="sidebar-sites-content" style="font-size:0.8rem;color:var(--color-text-muted);padding-left:16px;">Memuat...</div>
+      </div>
+      
       <div class="app-sidebar__spacer"></div>
       <div class="app-sidebar__footer">
         <button class="app-sidebar__item" data-page="settings" onclick="App.navigate('settings')">
@@ -791,6 +797,72 @@ async function initApp() {
     navigator.serviceWorker.register('/sw.js')
       .then(reg => console.log('[SW] Registered:', reg.scope))
       .catch(err => console.warn('[SW] Failed (non-critical):', err));
+  }
+  
+  // Render sidebar sites
+  if (isAuthed || storage.get('guestMode')) {
+    renderSidebarSites();
+  }
+}
+
+// =====================================================
+// SIDEBAR DYNAMIC LIST
+// =====================================================
+async function renderSidebarSites() {
+  const container = document.getElementById('sidebar-sites-content');
+  if (!container) return;
+  
+  try {
+    const { SitesAPI, DevicesAPI } = await import('./supabase.js');
+    const [sites, devices] = await Promise.all([
+      SitesAPI.getAll(),
+      DevicesAPI.getAll()
+    ]);
+    
+    if (!sites || sites.length === 0) {
+      container.innerHTML = '<div style="padding:8px 0">Belum ada data</div>';
+      return;
+    }
+
+    let html = '';
+    sites.forEach(site => {
+      const siteDevices = devices.filter(d => d.site_id === site.id);
+      
+      html += `
+        <div class="sidebar-site-group" style="margin-top:12px">
+          <div class="sidebar-site-header" style="font-weight:600;color:var(--color-text);cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px" onclick="App.navigate('site', {siteId:'${site.code || site.id}'})">
+            <span>📍</span> <span style="flex:1">${site.name}</span>
+          </div>
+          <div class="sidebar-site-devices" style="padding-left:12px;display:flex;flex-direction:column;gap:4px;margin-top:4px">
+      `;
+      
+      if (siteDevices.length === 0) {
+        html += `<div style="font-size:0.75rem;color:var(--color-text-muted)">Tidak ada perangkat</div>`;
+      } else {
+        siteDevices.forEach(device => {
+          const type = device.device_types?.name || 'OTHER';
+          const icon = type === 'GTGO' ? '🎛️' : type === 'OTB' ? '📦' : '🖥️';
+          html += `
+            <div class="sidebar-device-item" style="font-size:0.8rem;cursor:pointer;padding:4px 6px;border-radius:4px;transition:background 0.2s;display:flex;align-items:center;gap:6px" 
+                 onmouseover="this.style.background='var(--color-bg-overlay)'" 
+                 onmouseout="this.style.background='transparent'"
+                 onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})">
+              <span>${icon}</span> <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${device.name}">${device.name}</span>
+            </div>
+          `;
+        });
+      }
+      
+      html += `
+          </div>
+        </div>
+      `;
+    });
+    
+    container.innerHTML = html;
+  } catch (err) {
+    console.error('Failed to load sidebar sites', err);
+    container.innerHTML = '<span style="color:var(--color-danger)">Gagal memuat data</span>';
   }
 }
 

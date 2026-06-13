@@ -191,6 +191,16 @@ const DeviceTypesAPI = {
 // DEVICES QUERIES
 // =====================================================
 const DevicesAPI = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('devices')
+      .select('id, name, site_id, device_types(name)')
+      .eq('is_active', true)
+      .order('sort_order');
+    if (error) throw error;
+    return data;
+  },
+
   async getBySite(siteId) {
     const { data, error } = await supabase
       .from('devices')
