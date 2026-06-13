@@ -28,7 +28,29 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
     const bgColor = getDeviceBgColor(typeName);
 
     // Get stats
-    const stats = await PortsAPI.getStats(deviceId);
+    let stats;
+    if (typeName === 'GTGO' || typeName === 'OLT') {
+      const allPorts = await PortsAPI.getByDevice(deviceId);
+      const portMap = {};
+      allPorts.forEach(p => {
+        if (p.port_label) portMap[p.port_label] = p;
+        portMap[String(p.port_number)] = p;
+      });
+      let filled = 0, unverified = 0, reserved = 0;
+      for (let p = 1; p <= 8; p++) {
+        for (let s = 3; s < 19; s++) {
+          const pData = portMap[`1/${s}/${p}`] || portMap[String((s-3)*8+p)];
+          if (pData) {
+            if (pData.status === 'filled') filled++;
+            else if (pData.status === 'unverified') unverified++;
+            else if (pData.status === 'reserved') reserved++;
+          }
+        }
+      }
+      stats = { total: 128, filled, unverified, reserved, empty: 128 - filled - unverified - reserved };
+    } else {
+      stats = await PortsAPI.getStats(deviceId);
+    }
     
     // Calculate actual totals — always enforce hardware minimum as floor
     // (device.total_ports in DB may be stale/wrong, hardware capacity is the truth)
