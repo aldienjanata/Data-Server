@@ -129,17 +129,11 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
           </div>
 
           <div class="form-group">
-            <label class="form-label">Label Manual (Opsional)</label>
-            <input class="form-input" type="text" id="modal-label"
-                   value="${label}" placeholder="Kosongkan jika memilih port tujuan di atas"
-                   autocomplete="off">
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Detail / Keterangan Tambahan</label>
+            <label class="form-label">Keterangan Tujuan Port</label>
             <input class="form-input" type="text" id="modal-detail"
-                   value="${detail}" placeholder="cth: Port 17, GTGO 1/3/2"
-                   autocomplete="off">
+                   value="${detail}" placeholder="cth: Desa Bangsa"
+                   autocomplete="off"
+                   oninput="if(this.value.trim() !== '') document.getElementById('modal-status').value = 'filled';">
           </div>
 
           <div class="form-group">
@@ -153,8 +147,8 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
           </div>
 
           <div class="form-group">
-            <label class="form-label">Catatan</label>
-            <textarea class="form-textarea" id="modal-notes" placeholder="Catatan tambahan...">${notes}</textarea>
+            <label class="form-label">Keterangan Power / Fisik</label>
+            <textarea class="form-textarea" id="modal-notes" placeholder="cth: ODC 16 Power Tube Biru Core Biru">${notes}</textarea>
           </div>
 
           <div class="modal__actions">
@@ -253,12 +247,9 @@ window.loadTargetPorts = async function(siteId, targetDevId, targetPortId = '') 
       const devName = devSelect.options[devSelect.selectedIndex]?.text;
       const portNum = e.target.options[e.target.selectedIndex]?.dataset.port;
       
-      const labelInput = document.getElementById('modal-label');
-      const statusSelect = document.getElementById('modal-status');
-      
       if (devName && portNum) {
-        labelInput.value = `${devName} Port ${portNum}`;
-        statusSelect.value = 'filled';
+        const statusSelect = document.getElementById('modal-status');
+        if (statusSelect) statusSelect.value = 'filled';
       }
     };
   } catch (err) {
@@ -275,7 +266,6 @@ function getStatusLabel(status) {
 // SAVE PORT EDIT
 // =====================================================
 window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displayType) {
-  const label  = document.getElementById('modal-label').value.trim();
   const detail = document.getElementById('modal-detail').value.trim();
   const status = document.getElementById('modal-status').value;
   const notes  = document.getElementById('modal-notes').value.trim();
@@ -284,7 +274,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   const targetPortId = document.getElementById('modal-target-port')?.value;
 
   const updates = {
-    connection_label:  label  || null,
+    connection_label:  null,
     connection_detail: detail || null,
     connection_target_device: targetDevId || null,
     connection_target_port: targetPortId || null,

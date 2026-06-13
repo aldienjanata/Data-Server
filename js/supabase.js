@@ -365,6 +365,34 @@ const PortsAPI = {
       .eq('device_id', deviceId)
       .order('port_number');
     if (error) throw error;
+    
+    // Auto-generate missing ports if empty (e.g., after database wipe)
+    if (data && data.length === 0) {
+      try {
+        const device = await DevicesAPI.getById(deviceId);
+        const tName = device.device_types?.name;
+        let total = device.total_ports || 48;
+        if (tName === 'GTGO' || tName === 'OLT') total = Math.max(total, 128);
+        else if (tName === 'CISCO') total = Math.max(total, 48);
+        else if (tName === 'HUAWEI') total = Math.max(total, 56);
+        else if (tName === 'OTB') total = Math.max(total, 96);
+        
+        const portsData = Array.from({ length: total }, (_, i) => ({
+          device_id: deviceId,
+          port_number: i + 1,
+          status: 'empty'
+        }));
+        
+        const { error: insertErr } = await supabase.from('port_connections').insert(portsData);
+        if (!insertErr) {
+          const { data: newData } = await supabase.from('port_connections').select(`*, otb_tubes(tube_number)`).eq('device_id', deviceId).order('port_number');
+          return newData || [];
+        }
+      } catch (e) {
+        console.error('Failed to auto-generate ports:', e);
+      }
+    }
+    
     return data;
   },
 
