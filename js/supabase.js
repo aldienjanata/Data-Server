@@ -239,7 +239,7 @@ const DevicesAPI = {
     return data;
   },
 
-  async getBySiteAndName(siteCodeOrId, deviceName) {
+  async getBySiteAndName(siteCodeOrId, deviceNameOrSlug) {
     const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(siteCodeOrId);
     let siteQuery = supabase.from('sites').select('id');
     if (isUUID) siteQuery = siteQuery.eq('id', siteCodeOrId);
@@ -248,7 +248,28 @@ const DevicesAPI = {
     const { data: siteData, error: siteErr } = await siteQuery.single();
     if (siteErr) throw siteErr;
 
-    const { data, error } = await supabase
+    // Convert slug back to name (hyphens -> spaces), try both forms
+    const nameFromSlug = deviceNameOrSlug.replace(/-/g, ' ');
+
+    // Try exact match first, then partial
+    for (const searchName of [deviceNameOrSlug, nameFromSlug]) {
+      const { data, error } = await supabase
+        .from('devices')
+        .select(`
+          *,
+          device_types(name, icon, color),
+          sites(name, location)
+        `)
+        .eq('site_id', siteData.id)
+        .ilike('name', searchName)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (!error && data) return data;
+    }
+    
+    // Try wildcard: match first word of device name
+    const firstWord = nameFromSlug.split(' ')[0];
+    const { data: fuzzy, error: fuzzyErr } = await supabase
       .from('devices')
       .select(`
         *,
@@ -256,11 +277,12 @@ const DevicesAPI = {
         sites(name, location)
       `)
       .eq('site_id', siteData.id)
-      .ilike('name', deviceName)
+      .ilike('name', `${firstWord}%`)
       .eq('is_active', true)
-      .single();
-    if (error) throw error;
-    return data;
+      .limit(1);
+    if (!fuzzyErr && fuzzy?.length > 0) return fuzzy[0];
+
+    throw new Error('Perangkat tidak ditemukan');
   },
 
   async create(deviceData) {

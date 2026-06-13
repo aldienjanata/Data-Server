@@ -374,6 +374,21 @@ window.verifyPort = async function(portId, deviceId) {
 };
 
 // =====================================================
+// URL SLUG HELPERS
+// =====================================================
+// Convert "GTGO OLT" -> "GTGO-OLT", "OTB 1 96" -> "OTB-1-96"
+function slugifyDeviceName(name) {
+  return name
+    .trim()
+    .replace(/\s+/g, '-');  // replace spaces with hyphens (no encoding needed)
+}
+
+// Convert "GTGO-OLT" -> "GTGO OLT"
+function deslugifyDeviceName(slug) {
+  return decodeURIComponent(slug).replace(/-/g, ' ');
+}
+
+// =====================================================
 // NAVIGATION ROUTER
 // =====================================================
 const Router = {
@@ -399,7 +414,7 @@ const Router = {
       hash += `/${params.siteId}`;
     } else if (page === 'device') {
       if (params.siteId && params.deviceName) {
-        hash += `/${params.siteId}/${encodeURIComponent(params.deviceName)}`;
+        hash += `/${params.siteId}/${slugifyDeviceName(params.deviceName)}`;
       } else if (params.deviceId) {
         hash += `/${params.deviceId}`;
       }
@@ -442,7 +457,7 @@ const Router = {
     } else if (page === 'device') {
       if (parts.length >= 3) {
         params.siteId = parts[1];
-        params.deviceName = decodeURIComponent(parts[2]);
+        params.deviceName = deslugifyDeviceName(parts[2]);
       } else {
         params.deviceId = parts[1];
       }
