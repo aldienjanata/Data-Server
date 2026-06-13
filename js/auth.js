@@ -14,10 +14,16 @@ export let currentProfile = null;
 export function renderLoginPage() {
   return `
     <div class="login-page">
+      <style>
+        @keyframes floatCard {
+          0%, 100% { transform: translateY(0); box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+          50% { transform: translateY(-10px); box-shadow: 0 20px 30px rgba(0,0,0,0.1); }
+        }
+      </style>
       <canvas id="login-canvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;"></canvas>
-      <div class="login-card fade-in" style="position:relative;z-index:1;">
+      <div class="login-card fade-in" style="position:relative;z-index:1;animation: floatCard 6s ease-in-out infinite;">
         <div class="login-logo">
-          <img src="Logo.png" alt="Company Logo" class="login-company-logo"
+          <img src="/logos/logo apk.jpg" alt="Company Logo" class="login-company-logo" style="width:80px;height:auto;border-radius:20px;"
                onerror="this.style.display='none';document.getElementById('login-logo-fallback').style.display='flex';">
           <div id="login-logo-fallback" style="display:none;width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);align-items:center;justify-content:center;margin:0 auto var(--space-4);">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><circle cx="7" cy="6" r="1" fill="white" stroke="none"/><circle cx="7" cy="12" r="1" fill="white" stroke="none"/></svg>
@@ -86,17 +92,18 @@ export function initLoginAnimation() {
   const nodes = Array.from({ length: 28 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
-    vx: (Math.random() - 0.5) * 0.4,
-    vy: (Math.random() - 0.5) * 0.4,
-    size: 4 + Math.random() * 8,
-    opacity: 0.1 + Math.random() * 0.25,
+    vx: (Math.random() - 0.5) * 0.8,
+    vy: (Math.random() - 0.5) * 0.8,
+    size: 6 + Math.random() * 12,
+    opacity: 0.3 + Math.random() * 0.4,
     type: Math.floor(Math.random() * 3),
     pulse: Math.random() * Math.PI * 2,
   }));
 
   function drawNode(node) {
     ctx.save();
-    ctx.globalAlpha = node.opacity * (0.7 + 0.3 * Math.sin(node.pulse));
+    ctx.globalAlpha = node.opacity * (0.8 + 0.4 * Math.sin(node.pulse));
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const color = node.type === 0 ? '59, 130, 246' : '139, 92, 246';
     ctx.strokeStyle = `rgba(${color}, 1)`;
     ctx.lineWidth = 1;
@@ -124,11 +131,11 @@ export function initLoginAnimation() {
         const dx = nodes[i].x - nodes[j].x;
         const dy = nodes[i].y - nodes[j].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 150) {
+        if (dist < 180) {
           ctx.save();
-          ctx.globalAlpha = (1 - dist / 150) * 0.12;
+          ctx.globalAlpha = (1 - dist / 180) * 0.35;
           ctx.strokeStyle = 'rgba(59, 130, 246, 1)';
-          ctx.lineWidth = 0.5;
+          ctx.lineWidth = 1;
           ctx.setLineDash([4, 4]);
           ctx.beginPath();
           ctx.moveTo(nodes[i].x, nodes[i].y);
