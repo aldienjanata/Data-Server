@@ -689,7 +689,7 @@ async function initApp() {
     <aside class="app-sidebar" id="app-sidebar">
       <div class="app-sidebar__brand">
         <div class="app-sidebar__brand-logo">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><rect x="2" y="3" width="20" height="6" rx="1"/><rect x="2" y="12" width="20" height="6" rx="1"/><circle cx="5.5" cy="6" r="1" fill="white" stroke="none"/><circle cx="5.5" cy="15" r="1" fill="white" stroke="none"/></svg>
+          <img src="/logos/logo apk.jpg" style="width: 24px; height: 24px; object-fit: cover; border-radius: 6px;">
         </div>
         <div>
           <div class="app-sidebar__brand-name">ServerData</div>

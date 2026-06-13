@@ -301,10 +301,10 @@ export async function renderGTGOView(device, container) {
                style="
                  border-radius:5px;
                  padding:4px 3px;
-                 min-height:40px;
+                 min-height:56px;
                  display:flex;flex-direction:column;
                  align-items:center;justify-content:center;
-                 font-size:0.55rem;cursor:pointer;
+                 font-size:0.65rem;cursor:pointer;
                  transition:transform 0.1s;
                  background:${isFilled ? 'rgba(16,185,129,0.18)' : 'var(--color-bg-elevated)'};
                  border:1.5px solid ${isFilled ? 'var(--color-filled)' : 'var(--color-border)'};
@@ -312,7 +312,7 @@ export async function renderGTGOView(device, container) {
                onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10'"
                onmouseleave="this.style.transform='';this.style.zIndex='1'">
             <div style="font-family:var(--font-mono);font-weight:800;color:${isFilled ? 'var(--color-filled)' : 'var(--color-text-primary)'}">${label}</div>
-            ${isFilled ? `<div style="margin-top:2px;text-align:center;color:var(--color-text-primary);word-break:break-word;line-height:1.2;font-weight:700">${shortConn}</div>` : ''}
+            ${isFilled ? `<div style="margin-top:2px;text-align:center;color:var(--color-text-primary);word-break:break-word;line-height:1.2;font-weight:700;font-size:0.6rem">${shortConn}</div>` : ''}
           </div>
         `;
       }
