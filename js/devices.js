@@ -145,7 +145,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
             📋 Riwayat
           </button>
-          ` : ''}
         </div>
 
         <!-- Device Port View -->
