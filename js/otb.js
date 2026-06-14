@@ -47,7 +47,7 @@ export async function renderOTBView(device, container) {
     let cols = parseInt(localStorage.getItem('layout_cols_' + device.id));
     let rowsCount = parseInt(localStorage.getItem('layout_rows_' + device.id));
     
-    const isKebumenOTB1 = device.name === 'OTB 1 96' && device.sites?.name === 'Kebumen';
+    const isKebumenOTB1 = device.name?.startsWith('OTB 1') && device.sites?.name === 'Kebumen';
     const is144Default = device.model?.includes('144') || device.name?.includes('144') || allPorts.length === 144;
     
     if (!cols || !rowsCount) {
