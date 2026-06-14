@@ -623,8 +623,8 @@
 }
 
 .panel-port.empty {
-  background: rgba(30,42,64,0.6);
-  border-color: rgba(51,65,85,0.3);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.15);
   border-style: dashed;
 }
 .panel-port.empty:hover {
@@ -638,7 +638,7 @@
 .panel-port__num {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   font-weight: 600;
 }
 
