@@ -12,17 +12,17 @@ import { showPortModal } from './app.js';
 // Kolom 5-13: PORT 31&32 ... 47&48
 // =====================================================
 const CISCO_LAYOUT = [
-  { label: 'Baris A (Atas)',  ports: Array.from({length:26}, (_,i) => i*2+1) },
-  { label: 'Baris B (Bawah)', ports: Array.from({length:26}, (_,i) => i*2+2) }
+  { label: 'Baris A (Atas)',  ports: Array.from({length:24}, (_,i) => i*2+1), extra: [49, 51] },
+  { label: 'Baris B (Bawah)', ports: Array.from({length:24}, (_,i) => i*2+2), extra: [50, 52] }
 ];
 
 // =====================================================
 // HUAWEI PORT LAYOUT (sesuai Excel: 2 baris)
-// 28 kolom x 2 baris (PORT 1&2 ... 55&56)
+// 24 kolom x 2 baris (PORT 1-48) + 8 extra port 100G
 // =====================================================
 const HUAWEI_LAYOUT = [
-  { label: 'Baris A (Atas)',  ports: Array.from({length:28}, (_,i) => i*2+1) },
-  { label: 'Baris B (Bawah)', ports: Array.from({length:28}, (_,i) => i*2+2) }
+  { label: 'Baris A (Atas)',  ports: Array.from({length:24}, (_,i) => i*2+1), extra: [49, 51, 53, 55] },
+  { label: 'Baris B (Bawah)', ports: Array.from({length:24}, (_,i) => i*2+2), extra: [50, 52, 54, 56] }
 ];
 
 // =====================================================
@@ -116,6 +116,32 @@ export async function renderPanelView(device, container) {
                     </div>
                   `;
                 }).join('')}
+                ${row.extra && row.extra.length > 0 ? `
+                  <div style="width:24px;flex-shrink:0;border-left:2px dashed rgba(255,255,255,0.1);margin-left:4px;margin-right:4px;"></div>
+                  ${row.extra.filter(portNum => portNum <= ports.length || portNum <= device.total_ports).map((portNum, idx) => {
+                    const port = portMap[portNum];
+                    const status = port?.status || 'empty';
+                    const label = port?.connection_label || '';
+                    const detail = port?.connection_detail || '';
+                    const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label;
+                    const displayNum = idx * 2 + (row.label.includes('Atas') ? 1 : 2);
+
+                    return `
+                      <div class="panel-port ${status}"
+                           onclick="handlePanelPortClick('${device.id}', '${port?.id || ''}', ${portNum})"
+                           title="${label || ('Port 100G-' + displayNum)}${detail ? ' (' + detail + ')' : ''}"
+                           id="panel-port-${device.id}-${portNum}"
+                           data-port-num="${portNum}"
+                           data-status="${status}"
+                           data-label="${label.toLowerCase()}"
+                           style="flex-shrink:0;">
+                        <div class="panel-port__connector"></div>
+                        <div class="panel-port__num">${displayNum}</div>
+                        ${label ? `<div class="panel-port__label" style="font-weight:600">${shortLabel}</div>` : ''}
+                      </div>
+                    `;
+                  }).join('')}
+                ` : ''}
               </div>
             `).join('')}
           </div>
@@ -167,9 +193,7 @@ function generateLayout(totalPorts) {
 function renderPortLegend() {
   const items = [
     { color: 'var(--color-filled)',    label: 'Terisi' },
-    { color: 'var(--color-text-muted)', label: 'Kosong', dashed: true },
-    { color: 'var(--color-unverified)', label: 'Belum Verifikasi' },
-    { color: 'var(--color-reserved)',   label: 'Reservasi' }
+    { color: 'var(--color-text-muted)', label: 'Kosong', dashed: true }
   ];
   return items.map(item => `
     <div style="display:flex;align-items:center;gap:6px;">
