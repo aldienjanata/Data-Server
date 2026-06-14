@@ -47,10 +47,17 @@ export async function renderOTBView(device, container) {
     let cols = parseInt(localStorage.getItem('layout_cols_' + device.id));
     let rowsCount = parseInt(localStorage.getItem('layout_rows_' + device.id));
     
+    const isKebumenOTB1 = device.name === 'OTB 1 96' && device.sites?.name === 'Kebumen';
     const is144Default = device.model?.includes('144') || device.name?.includes('144') || allPorts.length === 144;
+    
     if (!cols || !rowsCount) {
-      cols = is144Default ? 12 : 24;
-      rowsCount = is144Default ? 12 : 4;
+      if (isKebumenOTB1) {
+        cols = 12;
+        rowsCount = 8;
+      } else {
+        cols = is144Default ? 12 : 24;
+        rowsCount = is144Default ? 12 : 4;
+      }
     }
     
     const totalPorts = Math.max(allPorts.length, cols * rowsCount);
@@ -60,26 +67,32 @@ export async function renderOTBView(device, container) {
 
     // Fill the grid based on layout rules
     for (let p = 1; p <= totalPorts; p++) {
-      let r, c;
-      let coreNumber;
+      let visualRow;
+      let r, c, coreNumber;
 
       if (is144Default && !localStorage.getItem('layout_cols_' + device.id)) {
         // Default OTB 144 logic
         r = Math.floor((p - 1) / cols);
         c = (p - 1) % cols;
         coreNumber = (11 - r) * 12 + c + 1;
+        visualRow = r;
+      } else if (isKebumenOTB1 && !localStorage.getItem('layout_cols_' + device.id)) {
+        // OTB 1 96 Kebumen logic: top-down left-to-right
+        r = Math.floor((p - 1) / cols);
+        c = (p - 1) % cols;
+        coreNumber = p;
+        visualRow = r;
       } else {
         // Generic logic: bottom-up left-to-right
         r = Math.floor((p - 1) / cols);
         c = (p - 1) % cols;
         coreNumber = p;
+        visualRow = rowsCount - 1 - r;
       }
 
       const portData = allPorts.find(px => px.port_number === p) || {
         device_id: device.id, port_number: p, status: 'empty'
       };
-
-      const visualRow = (is144Default && !localStorage.getItem('layout_cols_' + device.id)) ? r : (rowsCount - 1 - r);
       
       if (visualRow >= 0 && visualRow < rowsCount && c < cols) {
         grid[visualRow][c] = { portData, coreNumber };
