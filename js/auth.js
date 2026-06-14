@@ -61,6 +61,13 @@ export function renderLoginPage() {
                   onclick="handleAuthSubmit()" style="margin-top:16px">
             Masuk
           </button>
+
+          <div style="text-align:center; margin-top:12px;">
+            <button class="btn btn-ghost" id="auth-toggle-btn" 
+                    onclick="toggleAuthMode()" style="font-size:0.85rem; color:var(--color-primary)">
+              Daftar Akun Baru
+            </button>
+          </div>
         </div>
 
         <div class="divider" style="margin:20px 0"></div>
@@ -222,16 +229,31 @@ window.handleAuthSubmit = async function() {
   btn.disabled = true;
 
   try {
-    const data = await AuthAPI.signIn(email, password);
-    currentUser = data.user;
-    currentProfile = await AuthAPI.getProfile(currentUser.id);
-    vibrate([10, 5, 10]);
-    showToast(`👋 Selamat datang, ${currentProfile?.full_name || usernameInput}!`, 'success');
-    storage.set('lastUser', { email, name: currentProfile?.full_name });
-    window.App.navigate('dashboard');
+    if (isRegisterMode) {
+      // --- REGISTER MODE ---
+      const fullName = document.getElementById('auth-name')?.value.trim() || usernameInput;
+      await AuthAPI.signUp(email, password, fullName);
+      showToast(`✅ Akun berhasil dibuat! Silakan login.`, 'success');
+      // Switch back to login mode after register
+      isRegisterMode = false;
+      const nameGroup = document.getElementById('auth-name-group');
+      const submitBtn = document.getElementById('auth-submit-btn');
+      const toggleBtn = document.getElementById('auth-toggle-btn');
+      if (nameGroup) nameGroup.classList.add('hidden');
+      if (submitBtn) submitBtn.textContent = 'Masuk';
+      if (toggleBtn) toggleBtn.textContent = 'Daftar Akun Baru';
+    } else {
+      // --- LOGIN MODE ---
+      const data = await AuthAPI.signIn(email, password);
+      currentUser = data.user;
+      currentProfile = await AuthAPI.getProfile(currentUser.id);
+      vibrate([10, 5, 10]);
+      showToast(`👋 Selamat datang, ${currentProfile?.full_name || usernameInput}!`, 'success');
+      storage.set('lastUser', { email, name: currentProfile?.full_name });
+      window.App.navigate('dashboard');
+    }
   } catch (err) {
     console.error('[Auth]', err);
-    // Ignore internal schema errors if login actually fails due to credentials
     const msg = err.message?.includes('Invalid login') 
       ? 'Username atau password salah' 
       : (err.message || 'Terjadi kesalahan');
