@@ -361,18 +361,23 @@ window.submitAddDevice = async function(dbSiteId, slugSiteId) {
       notes: notes || null
     });
 
-    // Auto-create port connections
-    const portsData = Array.from({ length: totalPorts }, (_, i) => ({
-      device_id: device.id,
-      port_number: i + 1,
-      status: 'empty'
-    }));
-    const { PortsAPI } = await import('./supabase.js');
-    await PortsAPI.bulkCreate(portsData);
+    // Auto-create port connections only if not reactivated
+    if (!device._reactivated) {
+      const portsData = Array.from({ length: totalPorts }, (_, i) => ({
+        device_id: device.id,
+        port_number: i + 1,
+        status: 'empty'
+      }));
+      const { PortsAPI } = await import('./supabase.js');
+      await PortsAPI.bulkCreate(portsData);
+    }
 
     document.querySelector('.modal-backdrop').remove();
     showToast(`✅ Perangkat ${name} berhasil ditambahkan!`, 'success');
     window.App.navigate('site', { siteId: slugSiteId });
+    if (typeof window.renderSidebarSites === 'function') {
+      window.renderSidebarSites();
+    }
   } catch (err) {
     showToast(`❌ ${err.message}`, 'error');
   } finally {

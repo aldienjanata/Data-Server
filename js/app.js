@@ -943,14 +943,14 @@ async function initApp() {
   
   // Render sidebar sites
   if (isAuthed || storage.get('guestMode')) {
-    renderSidebarSites();
+    window.renderSidebarSites();
   }
 }
 
 // =====================================================
 // SIDEBAR DYNAMIC LIST (Accordion)
 // =====================================================
-async function renderSidebarSites() {
+window.renderSidebarSites = async function renderSidebarSites() {
   const container = document.getElementById('sidebar-sites-content');
   if (!container) return;
 

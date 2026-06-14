@@ -286,12 +286,40 @@ const DevicesAPI = {
   },
 
   async create(deviceData) {
+    // First, check if a soft-deleted device with the same name exists
+    const { data: existing } = await supabase
+      .from('devices')
+      .select('id, is_active')
+      .eq('site_id', deviceData.site_id)
+      .ilike('name', deviceData.name)
+      .maybeSingle();
+
+    if (existing) {
+      if (existing.is_active) {
+        throw new Error('Perangkat dengan nama ini sudah ada di site ini.');
+      } else {
+        // Reactivate!
+        const { data, error } = await supabase
+          .from('devices')
+          .update({ ...deviceData, is_active: true })
+          .eq('id', existing.id)
+          .select(`*, device_types(name, icon, color)`)
+          .single();
+        if (error) throw error;
+        data._reactivated = true;
+        return data;
+      }
+    }
+
     const { data, error } = await supabase
       .from('devices')
       .insert([deviceData])
       .select(`*, device_types(name, icon, color)`)
       .single();
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') throw new Error('Perangkat dengan nama ini sudah ada.');
+      throw error;
+    }
     return data;
   },
 
