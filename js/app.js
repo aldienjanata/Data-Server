@@ -579,7 +579,7 @@ const Router = {
       }
     }
     this.render(page, params);
-    updateBottomNav(page);
+    updateBottomNav(page, params);
   }
 };
 
@@ -727,13 +727,24 @@ function hideBottomNav() {
   if (nav) nav.style.display = 'none';
 }
 
-function updateBottomNav(page) {
+function updateBottomNav(page, params = {}) {
   document.querySelectorAll('.bottom-nav__item').forEach(item => {
     item.classList.toggle('active', item.dataset.page === page);
   });
   // Also update sidebar
   document.querySelectorAll('.app-sidebar__item[data-page]').forEach(item => {
     item.classList.toggle('active', item.dataset.page === page);
+  });
+  
+  // Update dynamic sidebar items
+  document.querySelectorAll('.sidebar-dynamic').forEach(item => {
+    let isActive = false;
+    if (page === 'site' && item.dataset.site && !item.dataset.device) {
+      isActive = (item.dataset.site === (params.siteId || ''));
+    } else if (page === 'device' && item.dataset.device) {
+      isActive = (item.dataset.device === (params.deviceId || ''));
+    }
+    item.classList.toggle('active', isActive);
   });
 }
 
@@ -968,10 +979,10 @@ async function renderSidebarSites() {
           const logoHtml = logoSrc
             ? `<img src="${logoSrc}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`
             : `<svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 2.82 1l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9H21a2 2 0 0 1 0 4z"/></svg>`;
-          devHtml += `<div style="font-size:0.82rem;color:var(--color-text);cursor:pointer;padding:4px 6px;border-radius:4px;display:flex;align-items:center;gap:6px;transition:background 0.15s" onmouseover="this.style.background='var(--color-bg-overlay)'" onmouseout="this.style.background='transparent'" onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})"><span style="display:flex;align-items:center;flex-shrink:0">${logoHtml}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${device.name}">${device.name}</span></div>`;
+          devHtml += `<div class="sidebar-dynamic" data-device="${device.id}" style="font-size:0.82rem;color:var(--color-text);cursor:pointer;padding:4px 6px;border-radius:4px;display:flex;align-items:center;gap:6px;transition:background 0.15s" onmouseover="if(!this.classList.contains('active'))this.style.background='var(--color-bg-overlay)'" onmouseout="if(!this.classList.contains('active'))this.style.background='transparent'" onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})"><span style="display:flex;align-items:center;flex-shrink:0">${logoHtml}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${device.name}">${device.name}</span></div>`;
         });
       }
-      html += `<div style="margin-top:4px"><div style="font-weight:600;cursor:pointer;padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:5px;transition:background 0.15s" onmouseover="this.style.background='var(--color-bg-overlay)'" onmouseout="this.style.background='transparent'" onclick="sidebarToggleSite('${cid}',event)"><span>📍</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${site.name}</span><span id="${cid}-arr" style="font-size:0.65rem;opacity:0.6;transition:transform 0.2s">▶</span></div><div id="${cid}" style="display:none;flex-direction:column;padding-left:12px;gap:2px;margin-top:2px">${devHtml}</div></div>`;
+      html += `<div style="margin-top:4px"><div class="sidebar-dynamic" data-site="${site.code || site.id}" style="font-weight:600;cursor:pointer;padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:5px;transition:background 0.15s" onmouseover="if(!this.classList.contains('active'))this.style.background='var(--color-bg-overlay)'" onmouseout="if(!this.classList.contains('active'))this.style.background='transparent'" onclick="App.navigate('site', {siteId:'${site.code || site.id}'}); sidebarToggleSite('${cid}',event,true)"><span onclick="sidebarToggleSite('${cid}',event);event.stopPropagation()">📍</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${site.name}</span><span id="${cid}-arr" style="font-size:0.65rem;opacity:0.6;transition:transform 0.2s" onclick="sidebarToggleSite('${cid}',event);event.stopPropagation()">▶</span></div><div id="${cid}" style="display:none;flex-direction:column;padding-left:12px;gap:2px;margin-top:2px">${devHtml}</div></div>`;
     });
 
     container.innerHTML = html;
@@ -981,15 +992,16 @@ async function renderSidebarSites() {
   }
 }
 
-window.sidebarToggleSite = function(cid, e) {
+window.sidebarToggleSite = function(cid, e, onlyOpen = false) {
   e && e.stopPropagation && e.stopPropagation();
   const p = document.getElementById(cid);
   const a = document.getElementById(cid + '-arr');
   if (!p) return;
-  const open = p.style.display === 'flex';
-  p.style.display = open ? 'none' : 'flex';
+  const isOpen = p.style.display === 'flex';
+  if (onlyOpen && isOpen) return; // do not close if onlyOpen is true
+  p.style.display = isOpen ? 'none' : 'flex';
   p.style.flexDirection = 'column';
-  if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+  if (a) a.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
 };
 
 // =====================================================
