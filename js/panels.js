@@ -46,7 +46,11 @@ export async function renderPanelView(device, container) {
     const layoutRows = parseInt(localStorage.getItem('layout_rows_' + device.id));
     
     let layout;
-    if (layoutCols && layoutRows) {
+    if (isCisco) {
+      layout = CISCO_LAYOUT;
+    } else if (isHuawei) {
+      layout = HUAWEI_LAYOUT;
+    } else if (layoutCols && layoutRows) {
       layout = [];
       for (let r = 0; r < layoutRows; r++) {
         const rowPorts = [];
@@ -56,7 +60,7 @@ export async function renderPanelView(device, container) {
         layout.push({ label: `Row ${r+1}`, ports: rowPorts });
       }
     } else {
-      layout = isCisco ? CISCO_LAYOUT : isHuawei ? HUAWEI_LAYOUT : generateLayout(device.total_ports || 48);
+      layout = generateLayout(device.total_ports || 48);
     }
     
     const deviceColor = isCisco ? 'var(--color-cisco)' : 'var(--color-huawei)';
@@ -76,9 +80,22 @@ export async function renderPanelView(device, container) {
               color:${deviceColor};font-weight:700;letter-spacing:0.1em;
             ">${device.name} — ${typeName}</div>
             <div style="
-              font-size:0.6rem;color:var(--color-text-muted);
-              font-family:var(--font-mono);
-            ">${ports.filter(p => p.status === 'filled').length}/${layout.reduce((acc, r) => acc + r.ports.length, 0)} PORT TERISI</div>
+              font-size:0.6rem;color:${deviceColor};
+              font-family:var(--font-mono);font-weight:600;
+            ">
+              ${(() => {
+                const mainTotal = layout.reduce((acc, r) => acc + r.ports.length, 0);
+                const extraTotal = layout.reduce((acc, r) => acc + (r.extra ? r.extra.length : 0), 0);
+                const mainFilled = ports.filter(p => p.status === 'filled' && layout.some(r => r.ports.includes(p.port_number))).length;
+                const extraFilled = ports.filter(p => p.status === 'filled' && layout.some(r => r.extra && r.extra.includes(p.port_number))).length;
+                
+                let text = `${mainFilled}/${mainTotal} PORT TERISI`;
+                if (extraTotal > 0) {
+                  text += ` &nbsp;|&nbsp; ${extraFilled}/${extraTotal} PORT TERISI (100G)`;
+                }
+                return text;
+              })()}
+            </div>
           </div>
 
           <!-- LED strip -->
