@@ -73,7 +73,15 @@ export async function renderListDataPage(container) {
   window.loadListData = loadListData;
   window.handleExportData = async () => {
     const imp = await import('./import.js');
-    if (imp.exportAllData) imp.exportAllData();
+    if (imp.exportFilteredData) {
+      const filters = {
+        siteId: document.getElementById('filter-site').value,
+        deviceId: document.getElementById('filter-device').value,
+        status: document.getElementById('filter-status').value,
+        searchQ: document.getElementById('filter-search')?.value.trim() || ''
+      };
+      imp.exportFilteredData(filters);
+    }
   };
   await loadListData();
 }

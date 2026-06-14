@@ -130,18 +130,6 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
 
         <!-- Action Buttons -->
         <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);flex-wrap:wrap">
-          ${canEdit() ? `
-          <input type="file" id="device-import-file" accept=".xlsx,.xls" style="display:none" onchange="handleDeviceImportFile(event, '${deviceId}', '${device.site_id}', '${typeName}')">
-          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('device-import-file').click()">
-            📥 Import Port
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="handleDownloadTemplate('${typeName}', '${device.name}')">
-            📋 Template Excel
-          </button>
-          ` : ''}
-          <button class="btn btn-secondary btn-sm" onclick="exportDevice('${deviceId}','${typeName}','${device.name}')">
-            📤 Export
-          </button>
           <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
             📋 Riwayat
           </button>

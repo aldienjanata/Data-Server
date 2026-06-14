@@ -626,24 +626,42 @@ export function downloadTemplate(specificTypeName = null, specificDeviceName = n
 }
 
 // =====================================================
-// EXPORT ALL DATA
+// EXPORT DATA (WITH FILTERS)
 // =====================================================
-export async function exportAllData() {
+export async function exportFilteredData(filters = {}) {
   if (!window.XLSX) await loadXLSX();
 
-  addLog('⏳ Mengambil semua data dari database...');
+  addLog('⏳ Menyiapkan export data...');
   showToast('Menyiapkan export...', 'info');
 
   try {
-    const sites = await SitesAPI.getAll();
+    let sites = await SitesAPI.getAll();
+    if (filters.siteId && filters.siteId !== 'all') {
+      sites = sites.filter(s => s.id === filters.siteId);
+    }
+
     const wb = XLSX.utils.book_new();
     let totalExported = 0;
 
     for (const site of sites) {
-      const devices = await DevicesAPI.getBySite(site.id);
+      let devices = await DevicesAPI.getBySite(site.id);
+      if (filters.deviceId && filters.deviceId !== 'all') {
+        devices = devices.filter(d => d.id === filters.deviceId);
+      }
 
       for (const device of devices) {
-        const ports = await PortsAPI.getByDevice(device.id);
+        let ports = await PortsAPI.getByDevice(device.id);
+        
+        if (filters.status && filters.status !== 'all') {
+          ports = ports.filter(p => p.status === filters.status);
+        }
+        if (filters.searchQ) {
+          const q = filters.searchQ.toLowerCase();
+          ports = ports.filter(p => (p.connection_label || '').toLowerCase().includes(q));
+        }
+
+        if (ports.length === 0) continue; // Skip device if no ports match
+        
         totalExported += ports.length;
 
         const typeName = device.device_types?.name || 'OTHER';
@@ -656,7 +674,7 @@ export async function exportAllData() {
           sheetData = buildPairExport(device, ports);
         }
 
-        const wsName = `${site.name.substring(0,8)}_${device.name.substring(0,12)}`.replace(/[/\\?*[\]]/g, '_').substring(0, 31);
+        const wsName = `${site.name.substring(0,8)}_${device.name.substring(0,12)}`.replace(/[\/\\?*[\]]/g, '_').substring(0, 31);
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
         ws['!cols'] = Array(sheetData[0]?.length || 5).fill({ wch: 20 });
         XLSX.utils.book_append_sheet(wb, ws, wsName);
@@ -664,13 +682,13 @@ export async function exportAllData() {
     }
 
     if (wb.SheetNames.length === 0) {
-      showToast('Tidak ada data untuk diekspor', 'warning');
+      showToast('Tidak ada data yang cocok dengan filter untuk diekspor', 'warning');
       return;
     }
 
     const filename = `ServerData_Export_${new Date().toISOString().slice(0,10)}.xlsx`;
     XLSX.writeFile(wb, filename);
-    addLog(`✅ Export selesai! ${totalExported} port dari ${sites.length} site → ${filename}`);
+    addLog(`✅ Export selesai! ${totalExported} port → ${filename}`);
     showToast(`✅ Export ${totalExported} port berhasil`, 'success');
 
   } catch (err) {
