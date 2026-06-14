@@ -597,8 +597,8 @@
 }
 
 .panel-port {
-  width: 60px;
-  height: 56px;
+  width: 80px;
+  height: 72px;
   border-radius: 6px;
   border: 1px solid transparent;
   display: flex;
@@ -637,17 +637,17 @@
 
 .panel-port__num {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
   font-weight: 600;
 }
 
 .panel-port__label {
-  font-size: 0.55rem;
+  font-size: 0.65rem;
   color: var(--color-filled);
   text-align: center;
-  line-height: 1.15;
-  max-width: 56px;
+  line-height: 1.25;
+  max-width: 76px;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -657,8 +657,8 @@
 .panel-port.empty .panel-port__label { color: var(--color-text-muted); }
 
 .panel-port__connector {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #1e293b;
   border: 1px solid #334155;
