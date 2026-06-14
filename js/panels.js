@@ -294,9 +294,9 @@ export async function renderGTGOView(device, container) {
       portMap[String(p.port_number)] = p;
     });
 
-    const SLOTS = 16;
+    const SLOTS = 14;
     const PORTS_PER_SLOT = 8;
-    const START_SLOT = 3;
+    const START_SLOT = 2;
     
     // Calculate stats based on what is actually rendered in the grid
     let realFilledCount = 0;
