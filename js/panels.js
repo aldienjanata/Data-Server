@@ -12,8 +12,8 @@ import { showPortModal } from './app.js';
 // Kolom 5-13: PORT 31&32 ... 47&48
 // =====================================================
 const CISCO_LAYOUT = [
-  { label: 'Baris A (Atas)',  ports: [1, 3, 5, 7, 31, 33, 35, 37, 39, 41, 43, 45, 47] },
-  { label: 'Baris B (Bawah)', ports: [2, 4, 6, 8, 32, 34, 36, 38, 40, 42, 44, 46, 48] }
+  { label: 'Baris A (Atas)',  ports: Array.from({length:26}, (_,i) => i*2+1) },
+  { label: 'Baris B (Bawah)', ports: Array.from({length:26}, (_,i) => i*2+2) }
 ];
 
 // =====================================================

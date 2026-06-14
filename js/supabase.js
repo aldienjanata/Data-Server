@@ -151,7 +151,7 @@ const SitesAPI = {
       
       let devTotal = device.total_ports || ports.length;
       if (typeName === 'GTGO' || typeName === 'OLT') devTotal = Math.max(devTotal, 128);
-      else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 48);
+      else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 52);
       else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
       else if (typeName === 'OTB') {
         const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
@@ -373,7 +373,7 @@ const PortsAPI = {
         const tName = device.device_types?.name;
         let total = device.total_ports || 48;
         if (tName === 'GTGO' || tName === 'OLT') total = Math.max(total, 128);
-        else if (tName === 'CISCO') total = Math.max(total, 48);
+        else if (tName === 'CISCO') total = Math.max(total, 52);
         else if (tName === 'HUAWEI') total = Math.max(total, 56);
         else if (tName === 'OTB') total = Math.max(total, 96);
         

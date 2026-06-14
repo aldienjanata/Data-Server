@@ -56,7 +56,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
     // (device.total_ports in DB may be stale/wrong, hardware capacity is the truth)
     let actualTotal = device.total_ports || stats.total || 0;
     if (typeName === 'GTGO' || typeName === 'OLT') actualTotal = Math.max(actualTotal, 128);
-    else if (typeName === 'CISCO')  actualTotal = Math.max(actualTotal, 48);
+    else if (typeName === 'CISCO')  actualTotal = Math.max(actualTotal, 52);
     else if (typeName === 'HUAWEI') actualTotal = Math.max(actualTotal, 56);
     else if (typeName === 'OTB') {
       const is144 = device.model?.includes('144') || device.name?.includes('144') || stats.total >= 140;

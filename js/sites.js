@@ -31,7 +31,7 @@ export async function renderSitePage(siteId, container) {
       
       let total = d.total_ports || ports.length;
       if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
-      else if (typeName === 'CISCO') total = Math.max(total, 48);
+      else if (typeName === 'CISCO') total = Math.max(total, 52);
       else if (typeName === 'HUAWEI') total = Math.max(total, 56);
       else if (typeName === 'OTB') {
         const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length >= 140;
@@ -194,7 +194,7 @@ function renderDeviceListItem(device, siteCode, site) {
   
   let total = device.total_ports || ports.length;
   if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
-  else if (typeName === 'CISCO') total = Math.max(total, 48);
+  else if (typeName === 'CISCO') total = Math.max(total, 52);
   else if (typeName === 'HUAWEI') total = Math.max(total, 56);
   else if (typeName === 'OTB') {
     const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
