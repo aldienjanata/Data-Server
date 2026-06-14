@@ -294,9 +294,18 @@ export async function renderGTGOView(device, container) {
       portMap[String(p.port_number)] = p;
     });
 
-    const SLOTS = 14;
+    let SLOTS = 16;
+    let START_SLOT = 3;
     const PORTS_PER_SLOT = 8;
-    const START_SLOT = 2;
+    
+    const siteName = device.sites?.name || '';
+    if (siteName === 'Kebumen') {
+      SLOTS = 14;
+      START_SLOT = 2;
+    } else if (siteName === 'Banyumas') {
+      SLOTS = 16;
+      START_SLOT = 3;
+    }
     
     // Calculate stats based on what is actually rendered in the grid
     let realFilledCount = 0;
@@ -334,7 +343,7 @@ export async function renderGTGOView(device, container) {
               ${device.name} &nbsp;/&nbsp; OLT
             </div>
             <div style="font-size:0.68rem;color:var(--color-text-muted);margin-top:4px">
-              Slot 3–18 &nbsp;·&nbsp; 8 PON/Slot &nbsp;·&nbsp; Total ${totalPorts} PON
+              Slot ${START_SLOT}–${START_SLOT + SLOTS - 1} &nbsp;·&nbsp; ${PORTS_PER_SLOT} PON/Slot &nbsp;·&nbsp; Total ${totalPorts} PON
             </div>
           </div>
         </div>
