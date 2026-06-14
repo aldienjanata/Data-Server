@@ -32,6 +32,7 @@ export async function renderPanelView(device, container) {
   const typeName = device.device_types?.name || device.type_name || 'OTHER';
   const isCisco  = typeName === 'CISCO';
   const isHuawei = typeName === 'HUAWEI';
+  const panelTotalPorts = isCisco ? 52 : isHuawei ? 56 : (device.total_ports || 48);
 
   container.innerHTML = `
     <div class="skeleton" style="height:400px;border-radius:var(--radius-xl)"></div>
@@ -60,7 +61,7 @@ export async function renderPanelView(device, container) {
         layout.push({ label: `Row ${r+1}`, ports: rowPorts });
       }
     } else {
-      layout = generateLayout(device.total_ports || 48);
+      layout = generateLayout(panelTotalPorts);
     }
     
     const deviceColor = isCisco ? 'var(--color-cisco)' : 'var(--color-huawei)';
@@ -111,7 +112,7 @@ export async function renderPanelView(device, container) {
           <div style="overflow-x:auto; padding-bottom:12px;">
             ${layout.map(row => `
               <div style="display:flex; gap:8px;">
-                ${row.ports.filter(portNum => portNum <= ports.length || portNum <= device.total_ports).map(portNum => {
+                ${row.ports.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map(portNum => {
                   const port = portMap[portNum];
                   const status = port?.status || 'empty';
                   const label = port?.connection_label || '';
@@ -135,7 +136,7 @@ export async function renderPanelView(device, container) {
                 }).join('')}
                 ${row.extra && row.extra.length > 0 ? `
                   <div style="width:24px;flex-shrink:0;border-left:2px dashed rgba(255,255,255,0.1);margin-left:4px;margin-right:4px;"></div>
-                  ${row.extra.filter(portNum => portNum <= ports.length || portNum <= device.total_ports).map((portNum, idx) => {
+                  ${row.extra.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map((portNum, idx) => {
                     const port = portMap[portNum];
                     const status = port?.status || 'empty';
                     const label = port?.connection_label || '';
