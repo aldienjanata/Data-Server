@@ -937,64 +937,56 @@ async function initApp() {
 }
 
 // =====================================================
-// SIDEBAR DYNAMIC LIST
+// SIDEBAR DYNAMIC LIST (Accordion)
 // =====================================================
 async function renderSidebarSites() {
   const container = document.getElementById('sidebar-sites-content');
   if (!container) return;
-  
+
   try {
-    const { SitesAPI, DevicesAPI } = await import('./supabase.js');
     const [sites, devices] = await Promise.all([
       SitesAPI.getAll(),
       DevicesAPI.getAll()
     ]);
-    
+
     if (!sites || sites.length === 0) {
       container.innerHTML = '<div style="padding:8px 0">Belum ada data</div>';
       return;
     }
 
     let html = '';
-    sites.forEach(site => {
+    sites.forEach((site, idx) => {
       const siteDevices = devices.filter(d => d.site_id === site.id);
-      
-      html += `
-        <div class="sidebar-site-group" style="margin-top:12px">
-          <div class="sidebar-site-header" style="font-weight:600;color:var(--color-text);cursor:pointer;padding:6px 0;display:flex;align-items:center;gap:6px" onclick="App.navigate('site', {siteId:'${site.code || site.id}'})">
-            <span>📍</span> <span style="flex:1">${site.name}</span>
-          </div>
-          <div class="sidebar-site-devices" style="padding-left:12px;display:flex;flex-direction:column;gap:4px;margin-top:4px">
-      `;
-      
+      const cid = `sdb-${idx}`;
+      let devHtml = '';
       if (siteDevices.length === 0) {
-        html += `<div style="font-size:0.8rem;color:var(--color-text-muted);opacity:0.7">Tidak ada perangkat</div>`;
+        devHtml = `<div style="font-size:0.8rem;color:var(--color-text-muted);padding:4px 6px">Tidak ada perangkat</div>`;
       } else {
         siteDevices.forEach(device => {
           const type = device.device_types?.name || 'OTHER';
-          html += `
-            <div class="sidebar-device-item" style="font-size:0.85rem;color:var(--color-text);opacity:0.9;cursor:pointer;padding:4px 6px;border-radius:4px;transition:all 0.2s;display:flex;align-items:center;gap:6px" 
-                 onmouseover="this.style.background='var(--color-bg-overlay)';this.style.opacity='1'" 
-                 onmouseout="this.style.background='transparent';this.style.opacity='0.9'"
-                 onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})">
-              <div style="width:16px;height:16px;flex-shrink:0">${getDeviceIcon(type, device.device_types?.icon)}</div> <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px" title="${device.name}">${device.name}</span>
-            </div>
-          `;
+          devHtml += `<div style="font-size:0.82rem;color:var(--color-text);cursor:pointer;padding:4px 6px;border-radius:4px;display:flex;align-items:center;gap:6px;transition:background 0.15s" onmouseover="this.style.background='var(--color-bg-overlay)'" onmouseout="this.style.background='transparent'" onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})"><span style="font-size:11px;flex-shrink:0">${getDeviceIcon(type, '')}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:128px" title="${device.name}">${device.name}</span></div>`;
         });
       }
-      
-      html += `
-          </div>
-        </div>
-      `;
+      html += `<div style="margin-top:4px"><div style="font-weight:600;cursor:pointer;padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:5px;transition:background 0.15s" onmouseover="this.style.background='var(--color-bg-overlay)'" onmouseout="this.style.background='transparent'" onclick="sidebarToggleSite('${cid}',event)"><span>📍</span><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${site.name}</span><span id="${cid}-arr" style="font-size:0.65rem;opacity:0.6;transition:transform 0.2s">▶</span></div><div id="${cid}" style="display:none;flex-direction:column;padding-left:12px;gap:2px;margin-top:2px">${devHtml}</div></div>`;
     });
-    
+
     container.innerHTML = html;
   } catch (err) {
     console.error('Failed to load sidebar sites', err);
     container.innerHTML = '<span style="color:var(--color-danger)">Gagal memuat data</span>';
   }
 }
+
+window.sidebarToggleSite = function(cid, e) {
+  e && e.stopPropagation && e.stopPropagation();
+  const p = document.getElementById(cid);
+  const a = document.getElementById(cid + '-arr');
+  if (!p) return;
+  const open = p.style.display === 'flex';
+  p.style.display = open ? 'none' : 'flex';
+  p.style.flexDirection = 'column';
+  if (a) a.style.transform = open ? 'rotate(0deg)' : 'rotate(90deg)';
+};
 
 // =====================================================
 // GLOBAL APP OBJECT
