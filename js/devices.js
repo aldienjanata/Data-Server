@@ -84,7 +84,7 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           <div style="flex:1;min-width:0">
             <div class="device-detail-name">${device.name}</div>
             <div class="device-detail-type">
-              <span class="badge badge-${typeName.toLowerCase()}">${typeName}</span>
+              <span class="badge badge-${typeName.toLowerCase()}">${typeName === 'GTGO' ? 'OLT' : typeName}</span>
               ${device.model ? `<span style="font-size:0.8rem;color:var(--color-text-muted);margin-left:6px">${device.model}</span>` : ''}
             </div>
             ${device.rack_position ? `<div style="font-size:0.78rem;color:var(--color-text-muted);margin-top:4px">Rack: ${device.rack_position}</div>` : ''}

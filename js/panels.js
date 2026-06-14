@@ -289,7 +289,7 @@ export async function renderGTGOView(device, container) {
         ">
           <div>
             <div style="font-family:var(--font-mono);font-size:0.72rem;color:${ACCENT};font-weight:700;letter-spacing:0.08em">
-              ${device.name} &nbsp;/&nbsp; GTGO OLT
+              ${device.name} &nbsp;/&nbsp; OLT
             </div>
             <div style="font-size:0.68rem;color:var(--color-text-muted);margin-top:4px">
               Slot 3–18 &nbsp;·&nbsp; 8 PON/Slot &nbsp;·&nbsp; Total ${totalPorts} PON
