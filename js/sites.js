@@ -191,31 +191,53 @@ function renderDeviceListItem(device, siteCode, site) {
   const pct = calcPercent(filled, Math.max(total, 1));
 
   return `
-    <div class="device-list-item" onclick="App.navigate('device', {siteId:'${siteCode}', deviceId:'${device.id}', deviceName:'${device.name}'})">
-      <div class="device-list-item__icon" style="background:${bgColor}">
-        ${icon}
-      </div>
-      <div class="device-list-item__info">
-        <div class="device-list-item__name">${device.name}</div>
-        <div class="device-list-item__meta">
-          <span class="badge badge-${typeName.toLowerCase()}">${typeName}</span>
-          ${device.model ? `<span>${device.model}</span>` : ''}
-          ${device.rack_position ? `<span>Rack: ${device.rack_position}</span>` : ''}
+    <div class="device-list-item group" onclick="App.navigate('device', {siteId:'${siteCode}', deviceId:'${device.id}', deviceName:'${device.name}'})">
+      <!-- Glow effect -->
+      <div class="device-card-glow" style="background: radial-gradient(circle at top right, ${color}15, transparent 70%);"></div>
+      
+      <div style="display:flex; justify-content:space-between; width:100%; align-items:flex-start; position:relative; z-index:1;">
+        <div style="display:flex; gap:16px; align-items:center">
+          <div class="device-list-item__icon" style="background:${bgColor}; border: 1px solid ${color}33; box-shadow: 0 4px 12px ${color}15;">
+            ${icon}
+          </div>
+          <div>
+            <div class="device-list-item__name" style="font-size:1.1rem; font-weight:700; letter-spacing:-0.02em;">${device.name}</div>
+            <div class="device-list-item__meta" style="margin-top:6px">
+              <span class="badge badge-${typeName.toLowerCase()}" style="box-shadow:0 2px 8px rgba(0,0,0,0.2)">${typeName}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="device-list-item__usage">
+          <div class="progress-ring">
+            <svg width="48" height="48" viewBox="0 0 56 56" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+              <circle class="progress-ring__bg" cx="28" cy="28" r="22" stroke="rgba(255,255,255,0.05)"/>
+              <circle class="progress-ring__fill" cx="28" cy="28" r="22"
+                      stroke="${color}"
+                      stroke-dasharray="${2 * Math.PI * 22}"
+                      stroke-dashoffset="${2 * Math.PI * 22 * (1 - pct / 100)}"
+                      stroke-linecap="round"
+                      transform="rotate(-90 28 28)"/>
+            </svg>
+            <div class="progress-ring__text" style="font-size:0.8rem; font-weight:800; color:${color}">${pct}%</div>
+          </div>
         </div>
       </div>
-      <div class="device-list-item__usage">
-        <div class="progress-ring">
-          <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle class="progress-ring__bg" cx="28" cy="28" r="22"/>
-            <circle class="progress-ring__fill" cx="28" cy="28" r="22"
-                    stroke="${color}"
-                    stroke-dasharray="${2 * Math.PI * 22}"
-                    stroke-dashoffset="${2 * Math.PI * 22 * (1 - pct / 100)}"
-                    transform="rotate(-90 28 28)"/>
-          </svg>
-          <div class="progress-ring__text">${pct}%</div>
+      
+      <div style="width:100%; display:flex; justify-content:space-between; align-items:flex-end; margin-top:16px; padding-top:16px; border-top:1px dashed rgba(255,255,255,0.08); position:relative; z-index:1;">
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <span style="font-size:0.65rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Spesifikasi</span>
+          <span style="font-size:0.85rem; color:var(--color-text-secondary); display:flex; gap:8px; align-items:center;">
+            <span>${device.model || 'Standar'}</span>
+            ${device.rack_position ? `<span style="color:rgba(255,255,255,0.2)">•</span> <span>Rack ${device.rack_position}</span>` : ''}
+          </span>
         </div>
-        <div style="font-size:0.7rem;color:var(--color-text-muted);text-align:center">${filled}/${total}</div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">
+          <span style="font-size:0.65rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Penggunaan Port</span>
+          <span style="font-size:0.9rem; font-weight:500; color:var(--color-text-secondary); font-family:var(--font-mono)">
+            <span style="color:${color}; font-weight:700">${filled}</span> <span style="opacity:0.5">/</span> ${total}
+          </span>
+        </div>
       </div>
     </div>
   `;

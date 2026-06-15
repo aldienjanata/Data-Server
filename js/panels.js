@@ -321,18 +321,8 @@ export async function renderGTGOView(device, container) {
       }
     }
     
-    // Calculate stats based on what is actually rendered in the grid
-    let realFilledCount = 0;
-    for (let p = 1; p <= PORTS_PER_SLOT; p++) {
-      for (let s = START_SLOT; s < START_SLOT + SLOTS; s++) {
-        const label = `1/${s}/${p}`;
-        const portNum = (s - START_SLOT) * PORTS_PER_SLOT + p;
-        const pData = portMap[label] || portMap[String(portNum)];
-        if (pData && pData.status === 'filled') realFilledCount++;
-      }
-    }
-
-    const filledCount = realFilledCount;
+    // Calculate stats based on all filled ports in the device to sync with dashboard
+    const filledCount = Object.values(portMap).filter(p => p.status === 'filled').length;
     const totalPorts = SLOTS * PORTS_PER_SLOT;
     const pct = Math.round(filledCount / totalPorts * 100);
 
