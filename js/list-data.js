@@ -121,6 +121,7 @@ async function loadListData() {
             <th>Port</th>
             <th>Core Label</th>
             <th>Koneksi / Tujuan</th>
+            <th>Keterangan</th>
             <th>Status</th>
             <th></th>
           </tr>
@@ -133,6 +134,7 @@ async function loadListData() {
               <td style="font-family:var(--font-mono)">${p.port_label || p.port_number || '-'}</td>
               <td>${p.core_label || '-'}</td>
               <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
+              <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
               <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
               <td>
                 <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"

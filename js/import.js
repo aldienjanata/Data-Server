@@ -721,7 +721,7 @@ function buildListExport(device, ports) {
     const existingPorts = new Set(ports.map(p => p.port_number));
     for (let i = 1; i <= maxPorts; i++) {
       if (!existingPorts.has(i)) {
-        ports.push({ port_number: i, status: 'empty' });
+        ports.push({ port_number: i, status: 'empty', updated_at: new Date().toISOString() });
       }
     }
     ports.sort((a, b) => a.port_number - b.port_number);
