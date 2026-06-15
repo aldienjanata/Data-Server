@@ -125,7 +125,11 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
     }
   } catch {}
 
-  const isEditable = canEdit();
+  let isEditable = canEdit();
+  const isOTBDevice = deviceData?.device_types?.name === 'OTB';
+  if (isOTBDevice) {
+    isEditable = false;
+  }
   const label = portData?.connection_label || '';
   const detail = portData?.connection_detail || '';
   const status = portData?.status || 'empty';
@@ -257,8 +261,10 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
         </div>
       ` : `
         <div class="port-detail-body">
-          <div style="text-align:center;padding:24px;color:var(--color-text-muted);">
-            ${isGuest() ? '👀 Mode tamu — tidak bisa mengedit' : 'Anda tidak memiliki izin edit'}
+          <div style="text-align:center;padding:24px;color:var(--color-text-muted); line-height: 1.5;">
+            ${isOTBDevice 
+              ? '👀 <b>Read-Only</b><br><span style="font-size:0.85rem">Port OTB hanya dapat diedit melalui perangkat sumber (OLT, Cisco, Huawei, dll) yang terhubung.</span>' 
+              : (isGuest() ? '👀 Mode tamu — tidak bisa mengedit' : 'Anda tidak memiliki izin edit')}
           </div>
           <button class="btn btn-secondary btn-full" onclick="document.querySelector('.modal-backdrop').remove()">
             Tutup
