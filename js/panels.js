@@ -364,8 +364,8 @@ export async function renderGTGOView(device, container) {
         </div>
 
         <!-- Grid -->
-        <div style="overflow-x:auto;padding:12px 16px 0">
-          <div style="display:grid;grid-template-columns:36px repeat(${SLOTS},1fr);gap:4px;min-width:${SLOTS*68+44}px">
+        <div style="overflow-x:auto;padding:12px 16px 0;scrollbar-width:thin">
+          <div style="display:grid;grid-template-columns:36px repeat(${SLOTS},minmax(88px, 1fr));gap:4px;">
 
             <!-- Slot headers -->
             <div></div>
@@ -432,8 +432,8 @@ export async function renderGTGOView(device, container) {
             onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'"
             onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
             <div style="font-family:var(--font-mono);font-weight:900;font-size:0.85rem;color:${labelColor};line-height:1.1;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${label}</div>
-            ${isFilled ? `<div style="font-size:0.75rem;font-weight:800;color:#ffffff;text-align:center;line-height:1.2;width:100%;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${conn || '—'}</div>` : ''}
-            ${p?.notes ? `<div style="font-size:0.55rem;font-weight:900;color:#fcd34d;text-align:center;line-height:1.2;margin-top:2px;max-width:100%;word-break:break-word;text-shadow:0 1px 2px rgba(0,0,0,0.6)" title="${p.notes}">${p.notes}</div>` : ''}
+            ${isFilled ? `<div style="font-size:0.75rem;font-weight:800;color:#ffffff;text-align:center;line-height:1.2;width:100%;overflow-wrap:break-word;word-break:normal;hyphens:auto;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${conn || '—'}</div>` : ''}
+            ${p?.notes ? `<div style="font-size:0.55rem;font-weight:900;color:#fcd34d;text-align:center;line-height:1.2;margin-top:2px;width:100%;overflow-wrap:break-word;word-break:normal;text-shadow:0 1px 2px rgba(0,0,0,0.6)" title="${p.notes}">${p.notes}</div>` : ''}
           </div>
         `;
       }
