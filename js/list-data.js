@@ -7,6 +7,35 @@ import { getStatusLabel, formatDevicePortLabel } from './utils.js';
 let currentData = [];
 let currentPage = 1;
 const ITEMS_PER_PAGE = 30;
+let sortField = 'site_device_port'; // default sort: site > device > port number
+let sortDir   = 'asc';  // 'asc' | 'desc'
+
+// =====================================================
+// SORT DATA
+// =====================================================
+function sortData(data) {
+  return [...data].sort((a, b) => {
+    let va, vb;
+    switch (sortField) {
+      case 'site_device_port': {
+        const siteA = a.devices?.sites?.name || '';
+        const siteB = b.devices?.sites?.name || '';
+        if (siteA !== siteB) return sortDir === 'asc' ? siteA.localeCompare(siteB) : siteB.localeCompare(siteA);
+        const devA = a.devices?.name || '';
+        const devB = b.devices?.name || '';
+        if (devA !== devB) return sortDir === 'asc' ? devA.localeCompare(devB) : devB.localeCompare(devA);
+        return sortDir === 'asc' ? (a.port_number||0) - (b.port_number||0) : (b.port_number||0) - (a.port_number||0);
+      }
+      case 'site':   va = a.devices?.sites?.name || ''; vb = b.devices?.sites?.name || ''; break;
+      case 'device': va = a.devices?.name || '';        vb = b.devices?.name || '';        break;
+      case 'port':   return sortDir === 'asc' ? (a.port_number||0) - (b.port_number||0) : (b.port_number||0) - (a.port_number||0);
+      case 'status': va = a.status || ''; vb = b.status || ''; break;
+      case 'connection': va = a.connection_label || ''; vb = b.connection_label || ''; break;
+      default:       return 0;
+    }
+    return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+  });
+}
 
 export async function renderListDataPage(container) {
   container.innerHTML = `
@@ -33,7 +62,17 @@ export async function renderListDataPage(container) {
             <option value="empty">Kosong</option>
             <option value="unverified">Belum Verifikasi</option>
           </select>
-          <button class="btn btn-primary" onclick="loadListData()">Cari & Filter</button>
+          <select class="form-select" id="filter-sort" style="flex:1;min-width:180px" onchange="handleSortChange(this.value)">
+            <option value="site_device_port_asc">Urut: Site › Perangkat › Port ↑</option>
+            <option value="port_asc">Urut: Port ↑ (Kecil ke Besar)</option>
+            <option value="port_desc">Urut: Port ↓ (Besar ke Kecil)</option>
+            <option value="device_asc">Urut: Nama Perangkat A→Z</option>
+            <option value="device_desc">Urut: Nama Perangkat Z→A</option>
+            <option value="site_asc">Urut: Site A→Z</option>
+            <option value="connection_asc">Urut: Koneksi A→Z</option>
+            <option value="status_asc">Urut: Status</option>
+          </select>
+          <button class="btn btn-primary" onclick="loadListData()">Cari &amp; Filter</button>
           <button class="btn btn-secondary" onclick="handleExportData()" style="margin-left:auto">📤 Export Excel</button>
         </div>
       </div>
@@ -104,7 +143,7 @@ async function loadListData() {
     // Pass the search query and filters to API
     const filtered = await PortsAPI.search(searchQ, filters);
 
-    currentData = filtered;
+    currentData = sortData(filtered);
     currentPage = 1;
     renderTable();
 
@@ -113,6 +152,17 @@ async function loadListData() {
     container.innerHTML = `<div style="padding:20px;color:var(--color-danger)">Error: ${err.message}</div>`;
   }
 }
+
+window.handleSortChange = function(val) {
+  // val format: "fieldname_asc" or "compound_field_name_asc"
+  const dir = val.endsWith('_desc') ? 'desc' : 'asc';
+  const field = dir === 'desc' ? val.slice(0, -5) : val.slice(0, -4);
+  sortField = field;
+  sortDir   = dir;
+  currentData = sortData(currentData);
+  currentPage = 1;
+  renderTable();
+};
 
 function renderTable() {
   const container = document.getElementById('list-data-table-container');

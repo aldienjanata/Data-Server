@@ -733,8 +733,10 @@ function buildListExport(device, ports) {
         ports.push({ port_number: i, status: 'empty', updated_at: new Date().toISOString() });
       }
     }
-    ports.sort((a, b) => a.port_number - b.port_number);
   }
+
+  // Always sort all ports by port_number so export is consistently ordered
+  ports.sort((a, b) => (a.port_number || 0) - (b.port_number || 0));
 
   ports.forEach(p => {
     if (p.port_number === 0) return; // Skip port 0
