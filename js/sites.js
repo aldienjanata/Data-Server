@@ -216,8 +216,7 @@ function renderDeviceListItem(device, siteCode, site) {
                       stroke="${color}"
                       stroke-dasharray="${2 * Math.PI * 22}"
                       stroke-dashoffset="${2 * Math.PI * 22 * (1 - pct / 100)}"
-                      stroke-linecap="round"
-                      transform="rotate(-90 28 28)"/>
+                      stroke-linecap="round"/>
             </svg>
             <div class="progress-ring__text" style="font-size:0.8rem; font-weight:800; color:${color}">${pct}%</div>
           </div>

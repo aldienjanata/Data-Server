@@ -691,8 +691,9 @@
    ===================================================== */
 .devices-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fill, minmax(280px, 400px));
+  gap: var(--space-5);
+  justify-content: start;
 }
 
 .device-list-item {
@@ -983,13 +984,15 @@
    ===================================================== */
 .progress-ring {
   position: relative;
-  width: 56px;
-  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
 }
 
 .progress-ring svg {
   transform: rotate(-90deg);
+  display: block;
 }
 
 .progress-ring__bg {
