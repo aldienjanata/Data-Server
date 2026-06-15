@@ -140,7 +140,8 @@ const SitesAPI = {
       .select(`
         id, name, model, total_ports,
         device_types(name),
-        port_connections(status)
+        port_connections(status),
+        sites!inner(name)
       `)
       .eq('site_id', siteId)
       .eq('is_active', true);
@@ -212,7 +213,8 @@ const DevicesAPI = {
       .select(`
         *,
         device_types(name, icon, color),
-        port_connections(status)
+        port_connections(status),
+        sites!inner(name)
       `)
       .eq('site_id', siteId)
       .eq('is_active', true)
