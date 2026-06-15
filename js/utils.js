@@ -62,6 +62,34 @@ export function getStatusLabel(status) {
   return map[status] || status;
 }
 
+export function formatDevicePortLabel(device, portNumber, fallbackLabel) {
+  if (fallbackLabel) return fallbackLabel;
+  if (!portNumber) return '-';
+
+  const typeName = device?.device_types?.name || device?.type_name || '';
+  if (typeName === 'GTGO' || typeName === 'OLT') {
+    let startSlot = 3;
+    let portsPerSlot = 8;
+    
+    if (device?.description && device.description.startsWith('{')) {
+      try {
+        const conf = JSON.parse(device.description);
+        startSlot = conf.startSlot !== undefined ? conf.startSlot : startSlot;
+        portsPerSlot = conf.portsPerSlot || portsPerSlot;
+      } catch(e) {}
+    } else {
+      const siteName = device?.sites?.name || '';
+      if (siteName === 'Kebumen') startSlot = 2;
+    }
+    
+    const p = ((portNumber - 1) % portsPerSlot) + 1;
+    const s = Math.floor((portNumber - 1) / portsPerSlot) + startSlot;
+    return `1/${s}/${p}`;
+  }
+  
+  return portNumber;
+}
+
 // Device capacity helper
 export function getDeviceCapacity(device) {
   const typeName = device.device_types?.name || '';

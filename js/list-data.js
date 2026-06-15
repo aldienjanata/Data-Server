@@ -2,7 +2,7 @@
 // LIST-DATA.JS - Global Data Table
 // =====================================================
 import { PortsAPI, SitesAPI, DevicesAPI } from './supabase.js';
-import { getStatusLabel } from './utils.js';
+import { getStatusLabel, formatDevicePortLabel } from './utils.js';
 
 let currentData = [];
 let currentPage = 1;
@@ -154,7 +154,7 @@ function renderTable() {
           <tr>
             <td><span class="highlight">${p.devices?.sites?.name || '-'}</span></td>
             <td>${p.devices?.name || '-'} <span style="color:var(--color-text-muted);font-size:0.7rem">(${p.devices?.device_types?.name || '-'})</span></td>
-            <td style="font-family:var(--font-mono)">${p.port_label || p.port_number || '-'}</td>
+            <td style="font-family:var(--font-mono)">${formatDevicePortLabel(p.devices, p.port_number, p.port_label)}</td>
             <td>${p.core_label || '-'}</td>
             <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
             <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
