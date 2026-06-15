@@ -62,6 +62,34 @@ export function getStatusLabel(status) {
   return map[status] || status;
 }
 
+// Device capacity helper
+export function getDeviceCapacity(device) {
+  const typeName = device.device_types?.name || '';
+  if (typeName === 'GTGO' || typeName === 'OLT') {
+    let slots = 16;
+    let portsPerSlot = 8;
+    if (device.description && device.description.startsWith('{')) {
+      try {
+        const conf = JSON.parse(device.description);
+        slots = conf.slots || slots;
+        portsPerSlot = conf.portsPerSlot || portsPerSlot;
+      } catch(e) {}
+    } else {
+      const siteName = device.sites?.name || '';
+      if (siteName === 'Kebumen') slots = 14;
+      else if (siteName === 'Banyumas') slots = 16;
+    }
+    return slots * portsPerSlot;
+  }
+  if (typeName === 'CISCO') return 52;
+  if (typeName === 'HUAWEI') return 56;
+  if (typeName === 'OTB') {
+    const is144 = device.model?.includes('144') || device.name?.includes('144');
+    return Math.max(device.total_ports || device.port_capacity || 0, is144 ? 144 : 96);
+  }
+  return device.total_ports || device.port_capacity || 0;
+}
+
 export function getStatusIcon(status) {
   const map = {
     filled:     '🟢',

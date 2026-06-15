@@ -2,6 +2,9 @@
 // SUPABASE CLIENT & QUERIES
 // js/supabase.js
 // =====================================================
+// =====================================================
+
+import { getDeviceCapacity } from './utils.js';
 
 // Gunakan Environment Variables dari Vercel / Vite (.env)
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -149,14 +152,7 @@ const SitesAPI = {
       const ports = device.port_connections || [];
       const f = ports.filter(p => p.status === 'filled').length;
       
-      let devTotal = device.total_ports || ports.length;
-      if (typeName === 'GTGO' || typeName === 'OLT') devTotal = Math.max(devTotal, 128);
-      else if (typeName === 'CISCO') devTotal = Math.max(devTotal, 52);
-      else if (typeName === 'HUAWEI') devTotal = Math.max(devTotal, 56);
-      else if (typeName === 'OTB') {
-        const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
-        devTotal = Math.max(devTotal, is144 ? 144 : 96);
-      }
+      const devTotal = getDeviceCapacity(device);
       
       total += devTotal;
       filled += f;
@@ -481,19 +477,33 @@ const PortsAPI = {
     return data;
   },
 
-  async search(query) {
-    const { data, error } = await supabase
+  async search(query, filters = {}) {
+    let q = supabase
       .from('port_connections')
       .select(`
         *,
-        devices(
-          name, site_id,
+        devices!inner(
+          id, name, site_id,
           device_types(name, icon, color),
           sites(name, code)
         )
-      `)
-      .ilike('connection_label', `%${query}%`)
-      .limit(50);
+      `);
+
+    if (query) {
+      q = q.or(`connection_label.ilike.%${query}%,connection_detail.ilike.%${query}%,notes.ilike.%${query}%,port_label.ilike.%${query}%`);
+    }
+    
+    if (filters.deviceId && filters.deviceId !== 'all') {
+      q = q.eq('device_id', filters.deviceId);
+    }
+    if (filters.siteId && filters.siteId !== 'all') {
+      q = q.eq('devices.site_id', filters.siteId);
+    }
+    if (filters.status && filters.status !== 'all') {
+      q = q.eq('status', filters.status);
+    }
+
+    const { data, error } = await q.limit(3000);
     if (error) throw error;
     return data;
   },

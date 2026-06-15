@@ -96,16 +96,9 @@ async function loadListData() {
   const searchQ = document.getElementById('filter-search')?.value.trim() || '';
 
   try {
-    // Pass the search query to API
-    const ports = await PortsAPI.search(searchQ);
-    
-    // Client-side filtering
-    const filtered = ports.filter(p => {
-      if (siteId !== 'all' && p.devices?.site_id !== siteId) return false;
-      if (devId !== 'all' && p.device_id !== devId) return false;
-      if (status !== 'all' && p.status !== status) return false;
-      return true;
-    });
+    const filters = { siteId, deviceId: devId, status };
+    // Pass the search query and filters to API
+    const filtered = await PortsAPI.search(searchQ, filters);
 
     if (filtered.length === 0) {
       container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--color-text-muted)">Tidak ada data ditemukan</div>';

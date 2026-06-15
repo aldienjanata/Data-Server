@@ -2,7 +2,7 @@
 // SITES.JS
 // =====================================================
 import { SitesAPI, DevicesAPI, SiteCoreNotesAPI } from './supabase.js';
-import { getSiteColor, getSiteEmoji, getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent } from './utils.js';
+import { getSiteColor, getSiteEmoji, getDeviceIcon, getDeviceBgColor, getDeviceColor, calcPercent, getDeviceCapacity } from './utils.js';
 import { canEdit } from './auth.js';
 import { showToast } from './app.js';
 
@@ -29,14 +29,7 @@ export async function renderSitePage(siteId, container) {
       const ports = d.port_connections || [];
       const filled = ports.filter(p => p.status === 'filled').length;
       
-      let total = d.total_ports || ports.length;
-      if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
-      else if (typeName === 'CISCO') total = Math.max(total, 52);
-      else if (typeName === 'HUAWEI') total = Math.max(total, 56);
-      else if (typeName === 'OTB') {
-        const is144 = d.model?.includes('144') || d.name?.includes('144') || ports.length >= 140;
-        total = Math.max(total, is144 ? 144 : 96);
-      }
+      const total = getDeviceCapacity(d);
       
       totalPorts += total;
       filledPorts += filled;
@@ -192,14 +185,8 @@ function renderDeviceListItem(device, siteCode, site) {
   const ports = device.port_connections || [];
   const filled = ports.filter(p => p.status === 'filled').length;
   
-  let total = device.total_ports || ports.length;
-  if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 1);
-  else if (typeName === 'CISCO') total = Math.max(total, 52);
-  else if (typeName === 'HUAWEI') total = Math.max(total, 56);
-  else if (typeName === 'OTB') {
-    const is144 = device.model?.includes('144') || device.name?.includes('144') || ports.length >= 140;
-    total = Math.max(total, is144 ? 144 : 96);
-  }
+  const total = getDeviceCapacity(device);
+
   
   const pct = calcPercent(filled, Math.max(total, 1));
 
