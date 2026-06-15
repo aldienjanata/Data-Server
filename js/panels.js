@@ -117,7 +117,7 @@ export async function renderPanelView(device, container) {
                   const status = port?.status || 'empty';
                   const label = port?.connection_label || '';
                   const detail = port?.connection_detail || '';
-                  const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label;
+                  const notes = port?.notes || '';
 
                   return `
                     <div class="panel-port ${status}"
@@ -130,7 +130,8 @@ export async function renderPanelView(device, container) {
                          style="flex-shrink:0;">
                       <div class="panel-port__connector"></div>
                       <div class="panel-port__num">${formatPort(portNum)}</div>
-                      ${label ? `<div class="panel-port__label" style="font-weight:600">${shortLabel}</div>` : ''}
+                      ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
+                      ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
                     </div>
                   `;
                 }).join('')}
@@ -141,7 +142,7 @@ export async function renderPanelView(device, container) {
                     const status = port?.status || 'empty';
                     const label = port?.connection_label || '';
                     const detail = port?.connection_detail || '';
-                    const shortLabel = label.length > 8 ? label.slice(0, 7) + '…' : label;
+                    const notes = port?.notes || '';
                     const displayNum = idx * 2 + (row.label.includes('Atas') ? 1 : 2);
 
                     return `
@@ -155,7 +156,8 @@ export async function renderPanelView(device, container) {
                            style="flex-shrink:0;">
                         <div class="panel-port__connector"></div>
                         <div class="panel-port__num">${displayNum}</div>
-                        ${label ? `<div class="panel-port__label" style="font-weight:600">${shortLabel}</div>` : ''}
+                        ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
+                        ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
                       </div>
                     `;
                   }).join('')}

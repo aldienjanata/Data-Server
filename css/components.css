@@ -597,18 +597,19 @@
 }
 
 .panel-port {
-  width: 80px;
-  height: 72px;
+  width: 108px;
+  min-height: 88px;
   border-radius: 6px;
   border: 1px solid transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   cursor: pointer;
   transition: all var(--transition-fast);
   position: relative;
+  padding: 6px 4px;
 }
 
 .panel-port.filled {
@@ -637,21 +638,36 @@
 
 .panel-port__num {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--color-text);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .panel-port__label {
-  font-size: 0.65rem;
+  font-size: 0.68rem;
   color: var(--color-filled);
+  font-weight: 700;
   text-align: center;
   line-height: 1.25;
-  max-width: 76px;
-  overflow: hidden;
+  max-width: 104px;
+  overflow-wrap: break-word;
+  word-break: normal;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.panel-port__notes {
+  font-size: 0.58rem;
+  color: #fcd34d;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.2;
+  max-width: 104px;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
 }
 
 .panel-port.empty .panel-port__label { color: var(--color-text-muted); }
