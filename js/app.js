@@ -413,7 +413,7 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
   if (btn) { btn.classList.add('loading'); btn.disabled = true; }
 
   try {
-    const { DevicesAPI } = await import('./supabase.js');
+    const { DevicesAPI, PortsAPI } = await import('./supabase.js');
     const currentDevice = await DevicesAPI.getById(deviceId);
     // For GTGO/OLT, use the slot/port label (e.g. 1/3/1); otherwise use Port N
     const sourceLabel = portLabel && portLabel !== 'null' 
@@ -421,7 +421,11 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
       : `${currentDevice.name} Port ${portNumber}`;
 
     let savedPort;
+    let oldTargetPortId = null;
+    
     if (portId) {
+      const currentPort = await PortsAPI.getById(portId);
+      oldTargetPortId = currentPort.connection_target_port;
       savedPort = await PortsAPI.update(portId, updates);
     } else {
       // Create new port connection
@@ -430,6 +434,19 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
         tube_id: tubeId || null,
         port_number: portNumber,
         ...updates
+      });
+    }
+    
+    // Clear the old target port if it was changed or removed
+    if (oldTargetPortId && oldTargetPortId !== targetPortId) {
+      await PortsAPI.update(oldTargetPortId, {
+        connection_label: null,
+        connection_detail: null,
+        connection_target_device: null,
+        connection_target_port: null,
+        status: 'empty',
+        notes: null,
+        updated_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous'
       });
     }
     
