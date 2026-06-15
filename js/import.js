@@ -711,7 +711,21 @@ function buildListExport(device, ports) {
   };
 
   const isOLT = device.device_types?.name === 'OLT' || device.device_types?.name === 'GTGO';
+  const isCisco = device.device_types?.name === 'CISCO';
+  const isHuawei = device.device_types?.name === 'HUAWEI';
   const startSlot = device.sites?.name === 'Kebumen' ? 2 : 3;
+
+  // Ensure extra ports for Cisco/Huawei are included even if missing in DB
+  if (isCisco || isHuawei) {
+    const maxPorts = isCisco ? 52 : 56;
+    const existingPorts = new Set(ports.map(p => p.port_number));
+    for (let i = 1; i <= maxPorts; i++) {
+      if (!existingPorts.has(i)) {
+        ports.push({ port_number: i, status: 'empty' });
+      }
+    }
+    ports.sort((a, b) => a.port_number - b.port_number);
+  }
 
   ports.forEach(p => {
     if (p.port_number === 0) return; // Skip port 0
@@ -725,6 +739,8 @@ function buildListExport(device, ports) {
       const slot = Math.floor((p.port_number - 1) / 8);
       const portNum = ((p.port_number - 1) % 8) + 1;
       portId = `1/${startSlot + slot}/${portNum}`;
+    } else if ((isCisco || isHuawei) && p.port_number > 48) {
+      portId = `Port 100G-${p.port_number - 48}`;
     } else if (p.core_label) {
       portId = `Port ${p.port_number} (${p.core_label})`;
     }
