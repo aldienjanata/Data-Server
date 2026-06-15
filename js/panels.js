@@ -365,7 +365,7 @@ export async function renderGTGOView(device, container) {
 
         <!-- Grid -->
         <div style="overflow-x:auto;padding:12px 16px 0">
-          <div style="display:grid;grid-template-columns:36px repeat(${SLOTS},1fr);gap:2px;min-width:${SLOTS*54+44}px">
+          <div style="display:grid;grid-template-columns:36px repeat(${SLOTS},1fr);gap:4px;min-width:${SLOTS*68+44}px">
 
             <!-- Slot headers -->
             <div></div>
@@ -418,12 +418,12 @@ export async function renderGTGOView(device, container) {
             data-status="${status}"
             data-label="${conn.toLowerCase()}"
             style="
-              border-radius:4px;
-              padding:6px 4px;
-              min-height:60px;
+              border-radius:6px;
+              padding:8px 4px;
+              min-height:75px;
               display:flex;flex-direction:column;
               align-items:center;justify-content:center;
-              gap:4px;
+              gap:5px;
               cursor:pointer;
               transition:all 0.12s ease;
               background:${bg};
@@ -431,9 +431,9 @@ export async function renderGTGOView(device, container) {
             "
             onmouseenter="this.style.transform='scale(1.08)';this.style.zIndex='10';this.style.boxShadow='0 2px 8px rgba(0,0,0,0.3)'"
             onmouseleave="this.style.transform='';this.style.zIndex='';this.style.boxShadow=''">
-            <div style="font-family:var(--font-mono);font-weight:900;font-size:0.8rem;color:${labelColor};line-height:1.1;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${label}</div>
-            ${isFilled ? `<div style="font-size:0.7rem;font-weight:700;color:#ffffff;text-align:center;line-height:1.2;width:100%;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${conn || '—'}</div>` : ''}
-            ${p?.notes ? `<div style="font-size:0.5rem;font-weight:800;color:#fcd34d;text-align:center;line-height:1.2;margin-top:4px;max-width:100%;word-break:break-word;text-shadow:0 1px 2px rgba(0,0,0,0.6)" title="${p.notes}">${p.notes}</div>` : ''}
+            <div style="font-family:var(--font-mono);font-weight:900;font-size:0.85rem;color:${labelColor};line-height:1.1;text-align:center;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${label}</div>
+            ${isFilled ? `<div style="font-size:0.75rem;font-weight:800;color:#ffffff;text-align:center;line-height:1.2;width:100%;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,0.6)">${conn || '—'}</div>` : ''}
+            ${p?.notes ? `<div style="font-size:0.55rem;font-weight:900;color:#fcd34d;text-align:center;line-height:1.2;margin-top:2px;max-width:100%;word-break:break-word;text-shadow:0 1px 2px rgba(0,0,0,0.6)" title="${p.notes}">${p.notes}</div>` : ''}
           </div>
         `;
       }
