@@ -710,10 +710,21 @@ function buildListExport(device, ports) {
     reserved: 'Reservasi'
   };
 
+  const isOLT = device.device_types?.name === 'OLT' || device.device_types?.name === 'GTGO';
+  const startSlot = device.sites?.name === 'Kebumen' ? 2 : 3;
+
   ports.forEach(p => {
+    if (p.port_number === 0) return; // Skip port 0
+
     let portId = `Port ${p.port_number}`;
+    
     if (p.port_label) {
       portId = p.port_label;
+    } else if (isOLT) {
+      // Auto-generate OLT label based on site configuration if missing
+      const slot = Math.floor((p.port_number - 1) / 8);
+      const portNum = ((p.port_number - 1) % 8) + 1;
+      portId = `1/${startSlot + slot}/${portNum}`;
     } else if (p.core_label) {
       portId = `Port ${p.port_number} (${p.core_label})`;
     }
@@ -724,8 +735,8 @@ function buildListExport(device, ports) {
     rows.push([
       portId,
       p.connection_label || '',
-      p.connection_detail || '',
-      p.notes || '',
+      p.notes || '',             // Power/Fisik (User types this in Catatan)
+      p.connection_detail || '', // Keterangan/Tertaut (User types this in Detail Koneksi)
       statusText,
       updated
     ]);
