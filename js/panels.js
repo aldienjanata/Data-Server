@@ -296,15 +296,25 @@ export async function renderGTGOView(device, container) {
 
     let SLOTS = 16;
     let START_SLOT = 3;
-    const PORTS_PER_SLOT = 8;
+    let PORTS_PER_SLOT = 8;
     
-    const siteName = device.sites?.name || '';
-    if (siteName === 'Kebumen') {
-      SLOTS = 14;
-      START_SLOT = 2;
-    } else if (siteName === 'Banyumas') {
-      SLOTS = 16;
-      START_SLOT = 3;
+    if (device.description && device.description.startsWith('{')) {
+      try {
+        const conf = JSON.parse(device.description);
+        SLOTS = conf.slots || SLOTS;
+        START_SLOT = conf.startSlot !== undefined ? conf.startSlot : START_SLOT;
+        PORTS_PER_SLOT = conf.portsPerSlot || PORTS_PER_SLOT;
+      } catch(e) {}
+    } else {
+      // Fallback for legacy devices
+      const siteName = device.sites?.name || '';
+      if (siteName === 'Kebumen') {
+        SLOTS = 14;
+        START_SLOT = 2;
+      } else if (siteName === 'Banyumas') {
+        SLOTS = 16;
+        START_SLOT = 3;
+      }
     }
     
     // Calculate stats based on what is actually rendered in the grid

@@ -193,7 +193,7 @@ function renderDeviceListItem(device, siteCode, site) {
   const filled = ports.filter(p => p.status === 'filled').length;
   
   let total = device.total_ports || ports.length;
-  if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 128);
+  if (typeName === 'GTGO' || typeName === 'OLT') total = Math.max(total, 1);
   else if (typeName === 'CISCO') total = Math.max(total, 52);
   else if (typeName === 'HUAWEI') total = Math.max(total, 56);
   else if (typeName === 'OTB') {
@@ -254,7 +254,13 @@ window.showAddDeviceModal = async function(dbSiteId, slugSiteId) {
       </div>
       <div class="form-group">
         <label class="form-label">Tipe Perangkat *</label>
-        <select class="form-select" id="new-dev-type" onchange="document.getElementById('custom-type-group').style.display = this.value === 'custom' ? 'block' : 'none'">
+        <select class="form-select" id="new-dev-type" onchange="
+          const t = this.options[this.selectedIndex].text.toUpperCase();
+          const isOLT = t.includes('OLT') || t.includes('GTGO');
+          document.getElementById('custom-type-group').style.display = this.value === 'custom' ? 'block' : 'none';
+          document.getElementById('normal-ports-group').style.display = isOLT ? 'none' : 'block';
+          document.getElementById('olt-ports-group').style.display = isOLT ? 'block' : 'none';
+        ">
           ${types.map(t => `<option value="${t.id}">${t.name} — ${t.description}</option>`).join('')}
           <option value="custom">➕ Tipe Baru (Tulis Manual)...</option>
         </select>
@@ -275,9 +281,27 @@ window.showAddDeviceModal = async function(dbSiteId, slugSiteId) {
         <label class="form-label">Model / Seri</label>
         <input class="form-input" id="new-dev-model" type="text" placeholder="cth: OTB 96 Core">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="normal-ports-group">
         <label class="form-label">Total Port</label>
         <input class="form-input" id="new-dev-ports" type="number" value="48" min="1" max="1000">
+      </div>
+      
+      <div id="olt-ports-group" style="display:none; background:rgba(59,130,246,0.05); padding:12px; border-radius:8px; border:1px solid rgba(59,130,246,0.2); margin-bottom:16px;">
+        <div style="font-size:0.75rem; color:var(--color-text-muted); margin-bottom:8px; font-weight:bold;">Konfigurasi OLT / GTGO</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Slot ke Samping</label>
+            <input class="form-input" id="new-dev-slots" type="number" value="16" min="1" max="100">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">Port ke Bawah</label>
+            <input class="form-input" id="new-dev-pps" type="number" value="8" min="1" max="100">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px; margin-bottom:0">
+          <label class="form-label">Mulai dari Slot</label>
+          <input class="form-input" id="new-dev-start" type="number" value="3" min="1" max="100" placeholder="contoh: 2">
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Posisi Rack</label>
@@ -301,7 +325,21 @@ window.submitAddDevice = async function(dbSiteId, slugSiteId) {
   const name       = document.getElementById('new-dev-name').value.trim();
   let typeId       = document.getElementById('new-dev-type').value;
   const model      = document.getElementById('new-dev-model').value.trim();
-  const totalPorts = parseInt(document.getElementById('new-dev-ports').value) || 48;
+  
+  const sel = document.getElementById('new-dev-type');
+  const typeText = sel.options[sel.selectedIndex].text.toUpperCase();
+  const isOLT = typeText.includes('OLT') || typeText.includes('GTGO');
+  
+  let totalPorts = parseInt(document.getElementById('new-dev-ports').value) || 48;
+  let description = null;
+  
+  if (isOLT) {
+    const slots = parseInt(document.getElementById('new-dev-slots').value) || 16;
+    const pps = parseInt(document.getElementById('new-dev-pps').value) || 8;
+    const start = parseInt(document.getElementById('new-dev-start').value) || 3;
+    totalPorts = slots * pps;
+    description = JSON.stringify({ startSlot: start, slots: slots, portsPerSlot: pps });
+  }
   const rack       = document.getElementById('new-dev-rack').value.trim();
   const notes      = document.getElementById('new-dev-notes').value.trim();
 
@@ -358,7 +396,10 @@ window.submitAddDevice = async function(dbSiteId, slugSiteId) {
       model: model || null,
       total_ports: totalPorts,
       rack_position: rack || null,
-      notes: notes || null
+      notes: notes || null,
+      description: description,
+      is_active: true,
+      sort_order: sortOrder
     });
 
     // Auto-create port connections only if not reactivated

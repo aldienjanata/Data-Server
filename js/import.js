@@ -713,7 +713,16 @@ function buildListExport(device, ports) {
   const isOLT = device.device_types?.name === 'OLT' || device.device_types?.name === 'GTGO';
   const isCisco = device.device_types?.name === 'CISCO';
   const isHuawei = device.device_types?.name === 'HUAWEI';
-  const startSlot = device.sites?.name === 'Kebumen' ? 2 : 3;
+  let startSlot = device.sites?.name === 'Kebumen' ? 2 : 3;
+  let pps = 8;
+  
+  if (isOLT && device.description && device.description.startsWith('{')) {
+    try {
+      const conf = JSON.parse(device.description);
+      startSlot = conf.startSlot !== undefined ? conf.startSlot : startSlot;
+      pps = conf.portsPerSlot || pps;
+    } catch(e) {}
+  }
 
   // Ensure extra ports for Cisco/Huawei are included even if missing in DB
   if (isCisco || isHuawei) {
@@ -736,8 +745,8 @@ function buildListExport(device, ports) {
       portId = p.port_label;
     } else if (isOLT) {
       // Auto-generate OLT label based on site configuration if missing
-      const slot = Math.floor((p.port_number - 1) / 8);
-      const portNum = ((p.port_number - 1) % 8) + 1;
+      const slot = Math.floor((p.port_number - 1) / pps);
+      const portNum = ((p.port_number - 1) % pps) + 1;
       portId = `1/${startSlot + slot}/${portNum}`;
     } else if ((isCisco || isHuawei) && p.port_number > 48) {
       portId = `Port 100G-${p.port_number - 48}`;
