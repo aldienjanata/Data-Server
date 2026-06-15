@@ -4,6 +4,10 @@
 import { PortsAPI, SitesAPI, DevicesAPI } from './supabase.js';
 import { getStatusLabel } from './utils.js';
 
+let currentData = [];
+let currentPage = 1;
+const ITEMS_PER_PAGE = 30;
+
 export async function renderListDataPage(container) {
   container.innerHTML = `
     <div style="max-width:var(--max-content-w);margin:0 auto">
@@ -100,49 +104,91 @@ async function loadListData() {
     // Pass the search query and filters to API
     const filtered = await PortsAPI.search(searchQ, filters);
 
-    if (filtered.length === 0) {
-      container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--color-text-muted)">Tidak ada data ditemukan</div>';
-      return;
-    }
-
-    container.innerHTML = `
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Site</th>
-            <th>Perangkat</th>
-            <th>Port</th>
-            <th>Core Label</th>
-            <th>Koneksi / Tujuan</th>
-            <th>Keterangan</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          ${filtered.map(p => `
-            <tr>
-              <td><span class="highlight">${p.devices?.sites?.name || '-'}</span></td>
-              <td>${p.devices?.name || '-'} <span style="color:var(--color-text-muted);font-size:0.7rem">(${p.devices?.device_types?.name || '-'})</span></td>
-              <td style="font-family:var(--font-mono)">${p.port_label || p.port_number || '-'}</td>
-              <td>${p.core_label || '-'}</td>
-              <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
-              <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
-              <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
-              <td>
-                <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"
-                  onclick="App.navigate('device',{siteId:'${p.devices?.sites?.code || ''}', deviceId:'${p.device_id}', deviceName:'${p.devices?.name || ''}', portId:'${p.id}'})"
-                  title="Lihat di Perangkat">
-                  🔌 Lihat
-                </button>
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    `;
+    currentData = filtered;
+    currentPage = 1;
+    renderTable();
 
   } catch (err) {
+    const container = document.getElementById('list-data-table-container');
     container.innerHTML = `<div style="padding:20px;color:var(--color-danger)">Error: ${err.message}</div>`;
   }
+}
+
+function renderTable() {
+  const container = document.getElementById('list-data-table-container');
+  if (!container) return;
+
+  if (currentData.length === 0) {
+    container.innerHTML = '<div style="padding:40px;text-align:center;color:var(--color-text-muted)">Tidak ada data ditemukan</div>';
+    return;
+  }
+
+  const totalPages = Math.ceil(currentData.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, currentData.length);
+  const pageData = currentData.slice(startIndex, endIndex);
+
+  // Global functions for pagination buttons
+  window.goToPage = function(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderTable();
+  };
+
+  container.innerHTML = `
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Site</th>
+          <th>Perangkat</th>
+          <th>Port</th>
+          <th>Core Label</th>
+          <th>Koneksi / Tujuan</th>
+          <th>Keterangan</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${pageData.map(p => `
+          <tr>
+            <td><span class="highlight">${p.devices?.sites?.name || '-'}</span></td>
+            <td>${p.devices?.name || '-'} <span style="color:var(--color-text-muted);font-size:0.7rem">(${p.devices?.device_types?.name || '-'})</span></td>
+            <td style="font-family:var(--font-mono)">${p.port_label || p.port_number || '-'}</td>
+            <td>${p.core_label || '-'}</td>
+            <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
+            <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
+            <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
+            <td>
+              <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"
+                onclick="App.navigate('device',{siteId:'${p.devices?.sites?.code || ''}', deviceId:'${p.device_id}', deviceName:'${p.devices?.name || ''}', portId:'${p.id}'})"
+                title="Lihat di Perangkat">
+                🔌 Lihat
+              </button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    
+    <!-- Pagination Controls -->
+    ${totalPages > 1 ? `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-4) var(--space-5);border-top:1px solid var(--color-border);background:var(--color-bg-elevated)">
+        <div style="font-size:0.8rem;color:var(--color-text-muted)">
+          Menampilkan ${startIndex + 1} - ${endIndex} dari ${currentData.length} data
+        </div>
+        <div style="display:flex;gap:var(--space-2);align-items:center">
+          <button class="btn btn-secondary btn-sm" ${currentPage === 1 ? 'disabled' : ''} onclick="goToPage(${currentPage - 1})">
+            &laquo; Prev
+          </button>
+          <div style="font-size:0.85rem;font-weight:600;padding:0 var(--space-2)">
+            Halaman ${currentPage} dari ${totalPages}
+          </div>
+          <button class="btn btn-secondary btn-sm" ${currentPage === totalPages ? 'disabled' : ''} onclick="goToPage(${currentPage + 1})">
+            Next &raquo;
+          </button>
+        </div>
+      </div>
+    ` : ''}
+  `;
 }
