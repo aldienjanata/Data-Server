@@ -664,19 +664,16 @@ export async function exportFilteredData(filters = {}) {
         
         totalExported += ports.length;
 
-        const typeName = device.device_types?.name || 'OTHER';
-
-        let sheetData = [];
-
-        if (typeName === 'OTB') {
-          sheetData = buildOTBExport(device, ports);
-        } else {
-          sheetData = buildPairExport(device, ports);
-        }
-
         const wsName = `${site.name.substring(0,8)}_${device.name.substring(0,12)}`.replace(/[\/\\?*[\]]/g, '_').substring(0, 31);
-        const ws = XLSX.utils.aoa_to_sheet(sheetData);
-        ws['!cols'] = Array(sheetData[0]?.length || 5).fill({ wch: 20 });
+        const ws = XLSX.utils.aoa_to_sheet(buildListExport(device, ports));
+        ws['!cols'] = [
+          { wch: 15 }, // Port/Lokasi
+          { wch: 30 }, // Tujuan Port
+          { wch: 25 }, // Power/Fisik
+          { wch: 25 }, // Keterangan/Tertaut
+          { wch: 15 }, // Status
+          { wch: 15 }  // Update Terakhir
+        ];
         XLSX.utils.book_append_sheet(wb, ws, wsName);
       }
     }
@@ -686,7 +683,7 @@ export async function exportFilteredData(filters = {}) {
       return;
     }
 
-    const filename = `ServerData_Export_${new Date().toISOString().slice(0,10)}.xlsx`;
+    const filename = `List Data Server ${new Date().toISOString().slice(0,10)}.xlsx`;
     XLSX.writeFile(wb, filename);
     addLog(`✅ Export selesai! ${totalExported} port → ${filename}`);
     showToast(`✅ Export ${totalExported} port berhasil`, 'success');
@@ -697,52 +694,44 @@ export async function exportFilteredData(filters = {}) {
   }
 }
 
-function buildOTBExport(device, ports) {
-  const rows = [[`DATA ${device.name}`, ...Array(23).fill(null)], [null]];
+function buildListExport(device, ports) {
+  const headers = ['Port/Lokasi', 'Tujuan Port', 'Power/Fisik', 'Keterangan/Tertaut', 'Status', 'Update Terakhir'];
+  
+  const rows = [
+    [null, device.name],
+    [],
+    headers
+  ];
 
-  // Group by tube
-  const byTube = {};
+  const statusMap = {
+    filled: 'Terisi',
+    empty: 'Kosong',
+    unverified: 'Belum Verifikasi',
+    reserved: 'Reservasi'
+  };
+
   ports.forEach(p => {
-    const t = p.tube_number || 1;
-    if (!byTube[t]) byTube[t] = [];
-    byTube[t].push(p);
-  });
+    let portId = `Port ${p.port_number}`;
+    if (p.port_label) {
+      portId = p.port_label;
+    } else if (p.core_label) {
+      portId = `Port ${p.port_number} (${p.core_label})`;
+    }
+    
+    const statusText = statusMap[p.status] || p.status;
+    const updated = p.updated_at ? p.updated_at.substring(0, 10) : '';
 
-  Object.entries(byTube).sort((a, b) => b[0] - a[0]).forEach(([tube, tubePorts]) => {
-    tubePorts.sort((a, b) => a.port_number - b.port_number);
-    const portNums = tubePorts.map(p => p.port_number);
-    const coreLabels = tubePorts.map(p => p.core_label || `CORE ${p.port_number}`);
-    const connLabels = tubePorts.map(p => p.connection_label || null);
-
-    rows.push(['No', ...portNums]);
-    rows.push([parseInt(tube), ...coreLabels]);
-    rows.push([null, ...connLabels]);
+    rows.push([
+      portId,
+      p.connection_label || '',
+      p.connection_detail || '',
+      p.notes || '',
+      statusText,
+      updated
+    ]);
   });
 
   return rows;
-}
-
-function buildPairExport(device, ports) {
-  const portPairs = [];
-  const portLabels = [];
-  const portConns = [];
-
-  ports.sort((a, b) => a.port_number - b.port_number);
-
-  for (let i = 0; i < ports.length; i += 2) {
-    const p1 = ports[i];
-    const p2 = ports[i + 1];
-    portPairs.push(`PORT ${p1.port_number}${p2 ? '&' + p2.port_number : ''}`);
-    portConns.push(p1.connection_label || null);
-  }
-
-  return [
-    [null, device.name],
-    [], [],
-    [null, ...portPairs],
-    [null, ...portConns],
-    [],
-  ];
 }
 
 // =====================================================
