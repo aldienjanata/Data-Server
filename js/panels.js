@@ -131,6 +131,7 @@ export async function renderPanelView(device, container) {
                       <div class="panel-port__connector"></div>
                       <div class="panel-port__num">${formatPort(portNum)}</div>
                       ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
+                      ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
                       ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
                     </div>
                   `;
@@ -157,6 +158,7 @@ export async function renderPanelView(device, container) {
                         <div class="panel-port__connector"></div>
                         <div class="panel-port__num">${displayNum}</div>
                         ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
+                        ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
                         ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
                       </div>
                     `;
