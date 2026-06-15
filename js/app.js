@@ -530,13 +530,13 @@ window.clearPortData = async function(portId, deviceId) {
     }
 
     document.querySelector('.modal-backdrop')?.remove();
-    showToast('🗑️ Isi port berhasil dihapus', 'success');
+    showToast('🗑️ Isi port berhasil dihapus, menyegarkan data...', 'success');
     vibrate([10, 5, 10]);
 
-    // Refresh current device view
-    if (window.App?.currentView) {
-      window.App.currentView();
-    }
+    // Auto refresh to sync stats and grid
+    setTimeout(() => {
+      window.location.reload();
+    }, 800);
   } catch (err) {
     showToast(`❌ Gagal menghapus: ${err.message}`, 'error');
   }
