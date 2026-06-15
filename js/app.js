@@ -251,11 +251,17 @@ export async function showPortModal(deviceId, portId, portNumber, tubeId, displa
           </div>
 
           ${portId ? `
-            <div style="margin-top:16px;text-align:center;">
+            <div style="margin-top:16px;text-align:center;display:flex;flex-direction:column;gap:8px;">
               <button class="btn btn-ghost btn-sm" style="color:var(--color-text-muted)"
                       onclick="verifyPort('${portId}', '${deviceId}')">
                 ✅ Tandai Sudah Diverifikasi
               </button>
+              ${portData?.connection_label || portData?.status === 'filled' ? `
+                <button class="btn btn-ghost btn-sm" style="color:#f87171;border:1px solid rgba(248,113,113,0.3)"
+                        onclick="clearPortData('${portId}', '${deviceId}')">
+                  🗑️ Hapus Isi Port
+                </button>
+              ` : ''}
             </div>
           ` : ''}
         </div>
@@ -490,6 +496,49 @@ window.savePortEdit = async function(deviceId, portId, portNumber, tubeId, displ
     }
   } finally {
     if (btn) { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+};
+
+// =====================================================
+// CLEAR PORT DATA (hapus isi port + port yang tertaut)
+// =====================================================
+window.clearPortData = async function(portId, deviceId) {
+  const confirmed = confirm('Apakah yakin ingin menghapus semua data port ini?\nData di perangkat yang tertaut juga akan otomatis terhapus.');
+  if (!confirmed) return;
+
+  const CLEAR_DATA = {
+    connection_label: null,
+    connection_detail: null,
+    connection_target_device: null,
+    connection_target_port: null,
+    status: 'empty',
+    notes: null,
+    updated_by: currentProfile?.full_name || currentUser?.email?.split('@')[0] || 'anonymous'
+  };
+
+  try {
+    // Get current port to find old linked target
+    const currentPort = await PortsAPI.getById(portId);
+    const oldTargetPortId = currentPort?.connection_target_port;
+
+    // Clear current port
+    await PortsAPI.update(portId, CLEAR_DATA);
+
+    // Clear linked target port if it exists
+    if (oldTargetPortId) {
+      await PortsAPI.update(oldTargetPortId, CLEAR_DATA);
+    }
+
+    document.querySelector('.modal-backdrop')?.remove();
+    showToast('🗑️ Isi port berhasil dihapus', 'success');
+    vibrate([10, 5, 10]);
+
+    // Refresh current device view
+    if (window.App?.currentView) {
+      window.App.currentView();
+    }
+  } catch (err) {
+    showToast(`❌ Gagal menghapus: ${err.message}`, 'error');
   }
 };
 
