@@ -47,7 +47,13 @@ export async function renderPanelView(device, container) {
     const layoutRows = parseInt(localStorage.getItem('layout_rows_' + device.id));
     
     let layout;
-    if (isCisco) {
+    if (device.description && device.description.trim().startsWith('[')) {
+      try {
+        layout = JSON.parse(device.description);
+      } catch(e) {
+        layout = generateLayout(panelTotalPorts);
+      }
+    } else if (isCisco) {
       layout = CISCO_LAYOUT;
     } else if (isHuawei) {
       layout = HUAWEI_LAYOUT;
@@ -111,59 +117,62 @@ export async function renderPanelView(device, container) {
           <!-- Port Rows -->
           <div style="overflow-x:auto; padding-bottom:12px;">
             ${layout.map(row => `
-              <div style="display:flex; gap:8px;">
-                ${row.ports.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map(portNum => {
-                  const port = portMap[portNum];
-                  const status = port?.status || 'empty';
-                  const label = port?.connection_label || '';
-                  const detail = port?.connection_detail || '';
-                  const notes = port?.notes || '';
-
-                  return `
-                    <div class="panel-port ${status}"
-                         onclick="handlePanelPortClick('${device.id}', '${port?.id || ''}', ${portNum})"
-                         title="${label || ('Port ' + portNum)}${detail ? ' (' + detail + ')' : ''}"
-                         id="panel-port-${device.id}-${portNum}"
-                         data-port-num="${portNum}"
-                         data-status="${status}"
-                         data-label="${label.toLowerCase()}"
-                         style="flex-shrink:0;">
-                      <div class="panel-port__connector"></div>
-                      <div class="panel-port__num">${formatPort(portNum)}</div>
-                      ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
-                      ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
-                      ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
-                    </div>
-                  `;
-                }).join('')}
-                ${row.extra && row.extra.length > 0 ? `
-                  <div style="width:24px;flex-shrink:0;border-left:2px dashed rgba(255,255,255,0.1);margin-left:4px;margin-right:4px;"></div>
-                  ${row.extra.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map((portNum, idx) => {
+              <div style="margin-bottom: 16px;">
+                ${row.label ? `<div style="font-family:var(--font-mono);font-size:0.75rem;color:${deviceColor};font-weight:700;margin-bottom:6px;letter-spacing:0.05em;border-bottom:1px solid ${deviceColor}33;padding-bottom:4px;display:inline-block">${row.label}</div>` : ''}
+                <div style="display:flex; gap:8px;">
+                  ${row.ports.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map(portNum => {
                     const port = portMap[portNum];
                     const status = port?.status || 'empty';
                     const label = port?.connection_label || '';
                     const detail = port?.connection_detail || '';
                     const notes = port?.notes || '';
-                    const displayNum = idx * 2 + (row.label.includes('Atas') ? 1 : 2);
 
                     return `
                       <div class="panel-port ${status}"
                            onclick="handlePanelPortClick('${device.id}', '${port?.id || ''}', ${portNum})"
-                           title="${label || ('Port 100G-' + displayNum)}${detail ? ' (' + detail + ')' : ''}"
+                           title="${label || ('Port ' + portNum)}${detail ? ' (' + detail + ')' : ''}"
                            id="panel-port-${device.id}-${portNum}"
                            data-port-num="${portNum}"
                            data-status="${status}"
                            data-label="${label.toLowerCase()}"
                            style="flex-shrink:0;">
                         <div class="panel-port__connector"></div>
-                        <div class="panel-port__num">${displayNum}</div>
+                        <div class="panel-port__num">${formatPort(portNum)}</div>
                         ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
                         ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
                         ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
                       </div>
                     `;
                   }).join('')}
-                ` : ''}
+                  ${row.extra && row.extra.length > 0 ? `
+                    <div style="width:24px;flex-shrink:0;border-left:2px dashed rgba(255,255,255,0.1);margin-left:4px;margin-right:4px;"></div>
+                    ${row.extra.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map((portNum, idx) => {
+                      const port = portMap[portNum];
+                      const status = port?.status || 'empty';
+                      const label = port?.connection_label || '';
+                      const detail = port?.connection_detail || '';
+                      const notes = port?.notes || '';
+                      const displayNum = idx * 2 + (row.label.includes('Atas') ? 1 : 2);
+
+                      return `
+                        <div class="panel-port ${status}"
+                             onclick="handlePanelPortClick('${device.id}', '${port?.id || ''}', ${portNum})"
+                             title="${label || ('Port 100G-' + displayNum)}${detail ? ' (' + detail + ')' : ''}"
+                             id="panel-port-${device.id}-${portNum}"
+                             data-port-num="${portNum}"
+                             data-status="${status}"
+                             data-label="${label.toLowerCase()}"
+                             style="flex-shrink:0;">
+                          <div class="panel-port__connector"></div>
+                          <div class="panel-port__num">${displayNum}</div>
+                          ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
+                          ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
+                          ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
+                        </div>
+                      `;
+                    }).join('')}
+                  ` : ''}
+                </div>
               </div>
             `).join('')}
           </div>

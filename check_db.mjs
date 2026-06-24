@@ -9,23 +9,32 @@ const env = Object.fromEntries(
 );
 
 const supabase = createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY);
+const SITE_ID = '9b9cb380-5d3c-429c-9fd1-57d2ba5322da';
 
 async function run() {
-  // Check existing device_types columns
-  const { data: types, error: typesErr } = await supabase.from('device_types').select('*').limit(3);
-  console.log('device_types error:', typesErr);
-  console.log('device_types sample:', JSON.stringify(types, null, 2));
+  // Check device types
+  const { data: types } = await supabase.from('device_types').select('id,name,port_style,color');
+  console.log('\n=== DEVICE TYPES ===');
+  types.forEach(t => console.log(`  [${t.id}] ${t.name} | port_style: ${t.port_style} | color: ${t.color}`));
 
-  // Check site Banyumas
-  const { data: sites, error: siteErr } = await supabase.from('sites').select('id,name');
-  console.log('sites:', JSON.stringify(sites));
+  // Check Banyumas devices with their types
+  const { data: devs } = await supabase
+    .from('devices')
+    .select('id,name,total_ports,sort_order,device_types(name,port_style)')
+    .eq('site_id', SITE_ID)
+    .order('sort_order');
   
-  // Check existing devices in Banyumas
-  if (sites && sites.length > 0) {
-    const bms = sites.find(s => s.name === 'Banyumas');
-    if (bms) {
-      const { data: devs } = await supabase.from('devices').select('id,name').eq('site_id', bms.id);
-      console.log('Existing Banyumas devices:', JSON.stringify(devs));
+  console.log('\n=== BANYUMAS DEVICES ===');
+  devs?.forEach(d => console.log(`  sort:${d.sort_order} | ${d.name} | type:${d.device_types?.name} | style:${d.device_types?.port_style} | ports:${d.total_ports}`));
+
+  // Check port counts per device
+  console.log('\n=== PORT COUNTS ===');
+  for (const d of devs || []) {
+    const { count } = await supabase.from('port_connections').select('*', { count: 'exact', head: true }).eq('device_id', d.id);
+    if (count !== d.total_ports) {
+      console.log(`  ⚠️  ${d.name}: total_ports=${d.total_ports}, actual ports in DB=${count}`);
+    } else {
+      console.log(`  ✅ ${d.name}: ${count} ports`);
     }
   }
 }
