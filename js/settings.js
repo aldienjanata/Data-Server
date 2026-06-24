@@ -111,6 +111,196 @@ export async function renderSettingsPage(container) {
         </div>
       </div>
 
+      </div>
+
+      ${!localStorage.getItem('seed_banyumas_done') ? `
+      <!-- Seed Banyumas -->
+      <div style="margin-top:var(--space-6);padding:var(--space-5);background:rgba(239,68,68,0.1);border:1px dashed #ef4444;border-radius:var(--radius-lg)" id="banyumas-seed-container">
+        <h3 style="color:#ef4444;margin-bottom:var(--space-2);font-size:1.1rem;font-weight:700">⚠️ Quick Setup Banyumas</h3>
+        <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:var(--space-4)">
+          Klik tombol di bawah untuk membuat 13 perangkat beserta port secara otomatis. Tombol ini akan hilang setelah instalasi sukses.
+        </p>
+        <button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="window.runSeedBanyumas()" id="btn-seed-banyumas">
+          🚀 Install 13 Perangkat Banyumas (Hanya 1x Klik)
+        </button>
+      </div>
+      ` : ''}
+
+      <!-- Sign Out -->
+      <div style="margin-top:var(--space-4)">
+        <button class="btn btn-danger btn-full btn-lg" onclick="handleSignOutClick()">
+          🚪 ${isGuest() ? 'Keluar dari Mode Tamu' : 'Keluar / Sign Out'}
+        </button>
+      </div>
+
+      <div style="text-align:center;margin-top:var(--space-6);color:var(--color-text-muted);font-size:0.75rem">
+        Server Data Manager © 2025<br>
+        Powered by Supabase + PWA
+      </div>
+    </div>
+  `;
+}
+
+// =====================================================
+// HANDLERS
+// =====================================================
+window.handleThemeToggle = function(checkbox) {
+  const theme = checkbox.checked ? 'dark' : 'light';
+  storage.set('theme', theme);
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'dark' ? '🌙' : '☀️';
+};
+
+window.handleSignOutClick = handleSignOut;
+
+window.syncOfflineData = async function() {
+  try {
+    const { OfflineQueue } = await import('./supabase.js');
+    const count = await OfflineQueue.sync();
+    if (count > 0) {
+      showToast(`✅ ${count} perubahan offline berhasil disinkronkan`, 'success');
+    } else {
+      showToast('ℹ️ Tidak ada data offline untuk disinkronkan', 'info');
+    }
+  } catch (err) {
+    showToast(`❌ Sinkronisasi gagal: ${err.message}`, 'error');
+  }
+};
+
+// =====================================================
+// SUPABASE CONFIG MODAL
+// =====================================================
+window.showSupabaseConfig = function() {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">🗄️ Konfigurasi Supabase</div>
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-lg);padding:12px;margin-bottom:16px;font-size:0.82rem;color:var(--color-warning)">
+        ⚠️ Ubah nilai ini di file <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">js/supabase.js</code> baris 8-9
+      </div>
+      <div class="form-group">
+        <label class="form-label">Supabase Project URL</label>
+        <div style="
+          background:var(--color-bg-input);border:1px solid var(--color-border-strong);
+          border-radius:var(--radius-lg);padding:11px var(--space-4);
+          font-family:var(--font-mono);font-size:0.8rem;color:var(--color-text-muted);
+          word-break:break-all;
+        ">https://YOUR_PROJECT_ID.supabase.co</div>
+        <div class="form-hint">Format: https://[project-id].supabase.co</div>
+      </div>
+      <div style="margin-top:12px">
+        <a href="https://supabase.com/dashboard" target="_blank" class="btn btn-primary btn-full">
+          🔗 Buka Supabase Dashboard
+        </a>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn btn-secondary btn-full" onclick="document.querySelector('.modal-backdrop').remove()">Tutup</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+};
+
+// =====================================================
+// EDIT PROFILE MODAL
+// =====================================================
+window.showEditProfileModal = function() {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">✏️ Edit Profil</div>
+      <div class="form-group">
+        <label class="form-label">Nama Lengkap</label>
+        <input class="form-input" id="edit-profile-name" type="text"
+               value="${currentProfile?.full_name || ''}" placeholder="Nama Anda">
+      </div>
+      <div class="modal__actions">
+        <button class="btn btn-secondary" style="flex:1" onclick="document.querySelector('.modal-backdrop').remove()">Batal</button>
+        <button class="btn btn-primary" style="flex:2" onclick="submitEditProfile()">💾 Simpan</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+};
+
+window.submitEditProfile = async function() {
+  const name = document.getElementById('edit-profile-name').value.trim();
+  if (!name) { showToast('Nama tidak boleh kosong', 'warning'); return; }
+  const btn = document.querySelector('.modal .btn-primary');
+  btn.classList.add('loading'); btn.disabled = true;
+  try {
+    const { AuthAPI } = await import('./supabase.js');
+    await AuthAPI.updateProfile(currentUser.id, { full_name: name });
+    currentProfile.full_name = name;
+    document.querySelector('.modal-backdrop').remove();
+    showToast('✅ Profil berhasil diperbarui', 'success');
+    window.App.navigate('settings');
+  } catch (err) {
+    showToast(`❌ ${err.message}`, 'error');
+  } finally {
+    btn.classList.remove('loading'); btn.disabled = false;
+  }
+};
+
+// =====================================================
+// IMPORT MODAL
+// =====================================================
+window.showImportModal = function() {
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  backdrop.onclick = (e) => { if (e.target === backdrop) backdrop.remove(); };
+  backdrop.innerHTML = `
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal__handle"></div>
+      <div class="modal__title">📂 Import Data Excel</div>
+      <p style="color:var(--color-text-muted);font-size:0.875rem;margin-bottom:var(--space-5)">
+        Import data dari file Excel (.xlsx) sesuai format template OTB/CISCO/HUAWEI
+      </p>
+      <div class="dropzone" id="import-dropzone" onclick="document.getElementById('file-import-input').click()">
+        <div class="dropzone__icon">📂</div>
+        <div class="dropzone__text">Tap untuk pilih file</div>
+        <div class="dropzone__hint">Format: .xlsx (Data Otb-Gtgo-Cisco)</div>
+      </div>
+      <input type="file" id="file-import-input" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this)">
+      <div id="import-preview" style="margin-top:var(--space-4)"></div>
+      <div class="modal__actions" style="margin-top:var(--space-4)">
+        <button class="btn btn-secondary btn-full" onclick="document.querySelector('.modal-backdrop').remove()">Tutup</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  // Drag & drop
+  const dropzone = document.getElementById('import-dropzone');
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processImportFile(file);
+  });
+};
+
+window.handleImportFile = function(input) {
+  const file = input.files[0];
+  if (file) processImportFile(file);
+};
+
+async function processImportFile(file) {
+  const preview = document.getElementById('import-preview');
+  preview.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;color:var(--color-text-muted);font-size:0.875rem">
+      <div class="loading-spinner" style="width:20px;height:20px;border-width:2px"></div>
+      Membaca file ${file.name}...
+    </div>
       <!-- Sign Out -->
       <div style="margin-top:var(--space-4)">
         <button class="btn btn-danger btn-full btn-lg" onclick="handleSignOutClick()">
@@ -305,16 +495,6 @@ async function processImportFile(file) {
         <div style="margin-top:12px;color:var(--color-text-muted);font-size:0.8rem">
           ℹ️ Fitur import otomatis akan segera hadir. Gunakan SQL seed di folder /supabase untuk import saat ini.
         </div>
-
-        <div style="margin-top:var(--space-6);padding:var(--space-5);background:rgba(239,68,68,0.1);border:1px dashed #ef4444;border-radius:var(--radius-lg)">
-          <h3 style="color:#ef4444;margin-bottom:var(--space-2);font-size:1.1rem;font-weight:700">⚠️ Area Berbahaya (Hanya Admin)</h3>
-          <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:var(--space-4)">
-            Tindakan di bawah ini akan memodifikasi struktur database secara permanen.
-          </p>
-          <button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="window.runSeedBanyumas()" id="btn-seed-banyumas">
-            🚀 Install 13 Perangkat Banyumas (Hanya 1x Klik)
-          </button>
-        </div>
       </div>
     `;
   } catch (err) {
@@ -444,6 +624,7 @@ window.runSeedBanyumas = async function() {
       }
     }
 
+    localStorage.setItem('seed_banyumas_done', 'true');
     alert('Selesai! 13 Perangkat berhasil ditambahkan ke Banyumas. Silakan reload halaman.');
     window.location.reload();
 
