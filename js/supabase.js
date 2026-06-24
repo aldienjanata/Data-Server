@@ -23,6 +23,14 @@ function initSupabase() {
   return supabase;
 }
 
+function getClient() {
+  // Return existing client or try to init
+  if (!supabase && typeof window.supabase !== 'undefined') {
+    return initSupabase();
+  }
+  return supabase;
+}
+
 // =====================================================
 // AUTH QUERIES
 // =====================================================
@@ -716,6 +724,7 @@ const SiteCoreNotesAPI = {
 
 export {
   initSupabase,
+  getClient,
   AuthAPI,
   SitesAPI,
   DeviceTypesAPI,
