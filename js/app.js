@@ -1051,7 +1051,7 @@ window.renderSidebarSites = async function renderSidebarSites() {
           
           let logoHtml;
           if (dbIcon && dbIcon.startsWith('<')) {
-            logoHtml = dbIcon;
+            logoHtml = `<span style="width:16px;height:16px;display:inline-block">${dbIcon}</span>`;
           } else if (dbIcon && dbIcon.startsWith('/')) {
             logoHtml = `<img src="${dbIcon}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
           } else {
