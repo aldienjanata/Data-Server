@@ -456,7 +456,8 @@ window.runSeedBanyumas = async function() {
   btn.innerHTML = 'Sedang memproses... (Jangan tutup halaman)';
   
   try {
-    const { supabase } = await import('./supabase.js');
+    const { initSupabase } = await import('./supabase.js');
+    const supabase = initSupabase();
     
     // 1. Dapatkan Site Banyumas
     const { data: sites } = await supabase.from('sites').select('id').eq('name', 'Banyumas');
