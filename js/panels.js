@@ -135,9 +135,9 @@ export async function renderPanelView(device, container) {
                            data-port-num="${portNum}"
                            data-status="${status}"
                            data-label="${label.toLowerCase()}"
-                           style="flex-shrink:0;">
+                           style="flex-shrink:0; padding:4px 8px;">
                         <div class="panel-port__connector"></div>
-                        <div class="panel-port__num" style="${port?.port_label ? 'font-size:0.5rem;letter-spacing:-0.5px;' : ''}">${port?.port_label || formatPort(portNum)}</div>
+                        <div class="panel-port__num" style="${port?.port_label ? 'font-size:0.65rem; font-weight:700; letter-spacing:0; padding: 2px 4px; white-space:nowrap;' : ''}">${port?.port_label || formatPort(portNum)}</div>
                         ${label ? `<div class="panel-port__label" style="font-weight:700;color:#ffffff">${label}</div>` : ''}
                         ${detail ? `<div class="panel-port__label" style="font-weight:600;color:#7dd3fc;font-size:0.6rem">${detail}</div>` : ''}
                         ${notes ? `<div class="panel-port__notes">${notes}</div>` : ''}
