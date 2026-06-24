@@ -521,6 +521,21 @@ const PortsAPI = {
     (data || []).forEach(p => { stats[p.status] = (stats[p.status] || 0) + 1; });
     stats.total = data?.length || 0;
     return stats;
+  },
+
+  async deleteEmptyPorts(deviceId) {
+    // Delete all port records that are empty AND have no connection data
+    const { data, error } = await supabase
+      .from('port_connections')
+      .delete()
+      .eq('device_id', deviceId)
+      .eq('status', 'empty')
+      .is('connection_label', null)
+      .is('connection_detail', null)
+      .is('notes', null)
+      .select();
+    if (error) throw error;
+    return data?.length || 0;
   }
 };
 

@@ -273,6 +273,8 @@ window.continueAsGuest = function() {
   storage.set('guestMode', true);
   showToast('👀 Mode tamu - hanya bisa melihat data', 'info');
   window.App.navigate('dashboard');
+  // Populate sidebar after activating guest mode
+  if (window.renderSidebarSites) window.renderSidebarSites();
 };
 
 // =====================================================

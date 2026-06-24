@@ -133,6 +133,11 @@ export async function renderDevicePage(deviceId, siteId, container, deviceName, 
           <button class="btn btn-secondary btn-sm" onclick="showAuditForDevice('${deviceId}','${device.name}')">
             📋 Riwayat
           </button>
+          ${(typeName === 'GTGO' || typeName === 'OLT') && canEdit() ? `
+            <button class="btn btn-sm" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.3)" onclick="deleteEmptyPortsForDevice('${deviceId}','${device.name}')" title="Hapus semua data port yang kosong (tidak ada isi)">
+              🗑️ Hapus Port Kosong
+            </button>
+          ` : ''}
         </div>
 
         <!-- Device Port View -->
@@ -459,4 +464,21 @@ window.confirmDeleteDevice = function(deviceId, siteId) {
     .catch(err => showToast(`❌ ${err.message}`, 'error'));
 };
 
+// =====================================================
+// DELETE EMPTY PORTS (OLT/GTGO only)
+// =====================================================
+window.deleteEmptyPortsForDevice = async function(deviceId, deviceName) {
+  const confirmed = confirm(
+    `🗑️ Hapus Port Kosong — ${deviceName}\n\nSemua record port yang status "Kosong" dan tidak memiliki data koneksi akan dihapus dari database.\n\nYakin ingin melanjutkan?`
+  );
+  if (!confirmed) return;
 
+  try {
+    showToast('Menghapus port kosong...', 'info');
+    const deleted = await PortsAPI.deleteEmptyPorts(deviceId);
+    showToast(`✅ ${deleted} port kosong berhasil dihapus`, 'success');
+    setTimeout(() => window.location.reload(), 800);
+  } catch (err) {
+    showToast(`❌ Gagal hapus: ${err.message}`, 'error');
+  }
+};
