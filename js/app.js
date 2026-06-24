@@ -1047,10 +1047,21 @@ window.renderSidebarSites = async function renderSidebarSites() {
       } else {
         siteDevices.forEach(device => {
           const type = device.device_types?.name || 'OTHER';
-          const logoSrc = { OTB: '/logos/OTB.webp', CISCO: '/logos/CISCO.webp', HUAWEI: '/logos/Huawei.webp', GTGO: '/logos/GTGO-OLT.jpeg' }[type];
-          const logoHtml = logoSrc
-            ? `<img src="${logoSrc}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`
-            : `<svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 2.82 1l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9H21a2 2 0 0 1 0 4z"/></svg>`;
+          const dbIcon = device.device_types?.icon;
+          
+          let logoHtml;
+          if (dbIcon && dbIcon.startsWith('<')) {
+            logoHtml = dbIcon;
+          } else if (dbIcon && dbIcon.startsWith('/')) {
+            logoHtml = `<img src="${dbIcon}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
+          } else {
+            const fallbackSrc = { OTB: '/logos/OTB.webp', CISCO: '/logos/CISCO.webp', HUAWEI: '/logos/Huawei.webp', GTGO: '/logos/GTGO-OLT.jpeg' }[type];
+            if (fallbackSrc) {
+              logoHtml = `<img src="${fallbackSrc}" style="width:16px;height:16px;object-fit:contain;border-radius:3px;flex-shrink:0" onerror="this.style.display='none'">`;
+            } else {
+              logoHtml = `<svg style="width:16px;height:16px;flex-shrink:0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-2.82 1V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 2.82 1l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9H21a2 2 0 0 1 0 4z"/></svg>`;
+            }
+          }
           devHtml += `<div class="sidebar-dynamic" data-device="${device.id}" style="font-size:0.82rem;color:var(--color-text);cursor:pointer;padding:4px 6px;border-radius:4px;display:flex;align-items:center;gap:6px;transition:background 0.15s" onmouseover="if(!this.classList.contains('active'))this.style.background='var(--color-bg-overlay)'" onmouseout="if(!this.classList.contains('active'))this.style.background='transparent'" onclick="App.navigate('device', {siteId:'${site.code || site.id}', deviceId:'${device.id}', deviceName:'${device.name}'})"><span style="display:flex;align-items:center;flex-shrink:0">${logoHtml}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${device.name}">${device.name}</span></div>`;
         });
       }
