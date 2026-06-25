@@ -493,7 +493,7 @@ window.runSeedBanyumas = async function() {
       { name: 'Server Facebook', sort_order: 16, total_ports: 1, desc: JSON.stringify([{label:"Ports",ports:[1]}]), portLabels: {} },
       { name: 'Server YouTube', sort_order: 17, total_ports: 1, desc: JSON.stringify([{label:"Ports",ports:[1]}]), portLabels: {} },
       { name: 'Server Tiktok', sort_order: 18, total_ports: 1, desc: JSON.stringify([{label:"Ports",ports:[1]}]), portLabels: {} },
-      { name: 'X86 BMS-01', sort_order: 10, total_ports: 14, desc: JSON.stringify(Array.from({length:7},(_,i)=>({ label: `Slot ${i+1}`, ports: [i*2+1, i*2+2] }))), portLabels: Object.fromEntries(Array.from({length:14},(_,i)=>[i+1,`Port ${(i%2)+1}`])) },
+      { name: 'X86 BMS-01', sort_order: 10, total_ports: 18, desc: JSON.stringify([...Array.from({length:7},(_,i)=>({ label: `Slot ${i+1}`, ports: [i*2+1, i*2+2] })), { label: "Ethernet", ports: [15,16,17,18] }]), portLabels: Object.fromEntries([...Array.from({length:14},(_,i)=>[i+1,`Port ${(i%2)+1}`]), [15,'ETH 1'],[16,'ETH 2'],[17,'ETH 3'],[18,'ETH 4']]) },
       { name: 'Server Proxmox', sort_order: 20, total_ports: 2, desc: JSON.stringify([{label:"Ports",ports:[1,2]}]), portLabels: {} },
       { name: 'CCR1036-8G-2S+', sort_order: 21, total_ports: 10, desc: JSON.stringify([{ label: "SFP+", ports: [1,2] }, { label: "ETH", ports: Array.from({length:8},(_,i)=>i+3) }]), portLabels: Object.fromEntries([...Array.from({length:2},(_,i)=>[i+1,`SFP+ ${i+1}`]),...Array.from({length:8},(_,i)=>[i+3,`ETH ${i+1}`])]) },
       { name: 'DELL Server Speedtest', sort_order: 22, total_ports: 2, desc: JSON.stringify([{label:"Ports",ports:[1,2]}]), portLabels: {} },

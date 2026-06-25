@@ -115,9 +115,9 @@ export async function renderPanelView(device, container) {
           "></div>
 
           <!-- Port Rows -->
-          <div style="overflow-x:auto; padding-bottom:12px;">
+          <div style="overflow-x:auto; padding-bottom:12px; display:flex; flex-direction:${layout.some(r => r.label && r.label.includes('Baris')) ? 'column' : 'row'}; flex-wrap:wrap; gap:16px;">
             ${layout.map(row => `
-              <div style="margin-bottom: 16px;">
+              <div style="margin-bottom: ${layout.some(r => r.label && r.label.includes('Baris')) ? '16px' : '0'};">
                 ${row.label ? `<div style="font-family:var(--font-mono);font-size:0.75rem;color:${deviceColor};font-weight:700;margin-bottom:6px;letter-spacing:0.05em;border-bottom:1px solid ${deviceColor}33;padding-bottom:4px;display:inline-block">${row.label}</div>` : ''}
                 <div style="display:flex; gap:8px;">
                   ${row.ports.filter(portNum => portNum <= ports.length || portNum <= panelTotalPorts).map(portNum => {

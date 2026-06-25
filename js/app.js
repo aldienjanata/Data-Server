@@ -1026,20 +1026,36 @@ async function initApp() {
   // Setup event listeners
   setupOnlineOfflineHandlers();
   
-  // ====== TEMP MIGRATION: Rename X86 Server Speedtest ======
+  // ====== TEMP MIGRATION: Update X86 BMS-01 Layout and Ports ======
   setTimeout(async () => {
     try {
       const client = (await import('./supabase.js')).getClient();
-      const { data: d2 } = await client.from('devices').select('id, name').eq('name', 'X86 Server Speedtest');
-      if (d2 && d2.length > 0) {
-        await client.from('devices').update({ name: 'X86 BMS-01' }).eq('id', d2[0].id);
-        console.log('[Migration] Renamed X86 Server Speedtest to X86 BMS-01');
-      }
-      
-      // Force refresh if they are on the old device page
-      if (location.hash.includes('Speedtest')) {
-        location.hash = location.hash.replace('Speedtest', 'BMS-01');
-        window.location.reload();
+      const { data: d } = await client.from('devices').select('id, total_ports').eq('name', 'X86 BMS-01');
+      if (d && d.length > 0) {
+        const devId = d[0].id;
+        const newDesc = JSON.stringify([...Array.from({length:7},(_,i)=>({ label: `Slot ${i+1}`, ports: [i*2+1, i*2+2] })), { label: "Ethernet", ports: [15,16,17,18] }]);
+        await client.from('devices').update({ total_ports: 18, description: newDesc }).eq('id', devId);
+        
+        // Add missing ports 15-18
+        const { data: existingPorts } = await client.from('port_connections').select('port_number').eq('device_id', devId).in('port_number', [15,16,17,18]);
+        const existingNums = new Set(existingPorts ? existingPorts.map(p => p.port_number) : []);
+        
+        const portsToInsert = [];
+        for (let i = 15; i <= 18; i++) {
+          if (!existingNums.has(i)) {
+            portsToInsert.push({
+              device_id: devId,
+              port_number: i,
+              status: 'empty',
+              port_label: `ETH ${i-14}`,
+              updated_at: new Date().toISOString()
+            });
+          }
+        }
+        if (portsToInsert.length > 0) {
+          await client.from('port_connections').insert(portsToInsert);
+          console.log('[Migration] Added ethernet ports 15-18 to X86 BMS-01');
+        }
       }
     } catch (e) {}
   }, 2000);
