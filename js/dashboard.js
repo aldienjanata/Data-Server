@@ -73,6 +73,18 @@ export async function renderDashboard(container) {
           </div>
         </div>
 
+        <!-- Sites List -->
+        <div class="section-header" style="margin-top:var(--space-6)">
+          <div class="section-title">
+            <span class="section-title__icon">📍</span>
+            Daftar Site
+          </div>
+          ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="showAddSiteModal()">+ Tambah Site</button>` : ''}
+        </div>
+        <div class="sites-grid">
+          ${siteStats.map(s => renderSiteCard(s)).join('')}
+        </div>
+
         <!-- Recent Activity Section -->
         <div class="section-header" style="margin-top:var(--space-6)">
           <div class="section-title">
