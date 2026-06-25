@@ -1,0 +1,385 @@
+/* =====================================================
+   MOBILE CSS - Server Data Manager
+   Only affects screens < 768px (mobile)
+   Desktop layout is UNTOUCHED
+   ===================================================== */
+
+/* =====================================================
+   MOBILE: APP HEADER
+   ===================================================== */
+@media (max-width: 767px) {
+  .app-header {
+    padding: 0 var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .app-header__logo-text {
+    display: none; /* Hide text label on mobile, keep icon */
+  }
+
+  .app-header__site-badge {
+    max-width: 120px;
+    font-size: 0.72rem;
+  }
+
+  /* =====================================================
+     MOBILE: PAGE CONTENT PADDING
+     ===================================================== */
+  .page-content {
+    padding: var(--space-3) var(--space-3);
+  }
+
+  /* =====================================================
+     MOBILE: BREADCRUMB
+     ===================================================== */
+  .breadcrumb {
+    font-size: 0.72rem;
+    gap: var(--space-1);
+    margin-bottom: var(--space-3);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .breadcrumb::-webkit-scrollbar { display: none; }
+
+  /* =====================================================
+     MOBILE: DEVICE DETAIL HEADER
+     ===================================================== */
+  .device-detail-header {
+    flex-direction: row;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .device-detail-icon {
+    width: 52px;
+    height: 52px;
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+
+  .device-detail-name {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+
+  .device-detail-type {
+    font-size: 0.72rem;
+  }
+
+  .device-stats-bar {
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+
+  /* Device Stats (Terisi/Kosong/Penggunaan) */
+  .device-stats-bar > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* =====================================================
+     MOBILE: STATS ROW (Terisi/Kosong/Penggunaan cards)
+     ===================================================== */
+  .site-stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+
+  .site-stat {
+    padding: var(--space-2) var(--space-1);
+  }
+
+  .site-stat__value {
+    font-size: 1.2rem;
+  }
+
+  .site-stat__label {
+    font-size: 0.58rem;
+  }
+
+  /* =====================================================
+     MOBILE: DASHBOARD
+     ===================================================== */
+  .dashboard-greeting {
+    font-size: 1.2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--space-2);
+  }
+
+  .sites-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* =====================================================
+     MOBILE: PANEL PORT — RESIZE PORTS TO FIT SCREEN
+     ===================================================== */
+  .panel-port {
+    width: 72px;
+    min-height: 72px;
+    padding: 4px 3px;
+    gap: 2px;
+  }
+
+  .panel-port__num {
+    font-size: 0.68rem;
+  }
+
+  .panel-port__label {
+    font-size: 0.58rem;
+    max-width: 66px;
+    -webkit-line-clamp: 2;
+  }
+
+  .panel-port__notes {
+    font-size: 0.5rem;
+    max-width: 66px;
+  }
+
+  .panel-port__connector {
+    width: 8px;
+    height: 8px;
+  }
+
+  /* =====================================================
+     MOBILE: PANEL CONTAINER — HORIZONTAL SCROLL
+     ===================================================== */
+  /* Panel wrapper: allow horizontal scroll on mobile */
+  [style*="overflow-x:auto"],
+  [style*="overflow-x: auto"] {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* =====================================================
+     MOBILE: PORT FILTER CHIPS
+     ===================================================== */
+  #port-filters {
+    gap: var(--space-1);
+    padding-bottom: 2px;
+  }
+
+  .chip {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+
+  /* =====================================================
+     MOBILE: SEARCH INPUT
+     ===================================================== */
+  #device-search {
+    font-size: 0.8rem;
+  }
+
+  /* =====================================================
+     MOBILE: DEVICE LIST (site page)
+     ===================================================== */
+  .devices-list {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-3);
+  }
+
+  .device-list-item {
+    padding: var(--space-4);
+  }
+
+  /* =====================================================
+     MOBILE: MODAL — FULLSCREEN BOTTOM SHEET
+     ===================================================== */
+  .modal {
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .modal__actions {
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-bottom: env(safe-area-inset-bottom, 8px);
+  }
+
+  .modal__actions .btn {
+    flex: none;
+    width: 100%;
+  }
+
+  /* =====================================================
+     MOBILE: FORM ELEMENTS
+     ===================================================== */
+  .form-input,
+  .form-select,
+  .form-textarea {
+    font-size: 16px; /* prevent iOS zoom-in on focus */
+  }
+
+  /* =====================================================
+     MOBILE: BUTTON SIZES
+     ===================================================== */
+  .btn-sm {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+
+  /* =====================================================
+     MOBILE: DEVICE HEADER ACTION BUTTONS (Edit/Delete)
+     ===================================================== */
+  /* These small icon buttons in top-right of device header */
+  .device-detail-header .btn-icon,
+  .device-detail-header .btn-icon-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  /* =====================================================
+     MOBILE: AUDIT LOG / RECENT CHANGES
+     ===================================================== */
+  .audit-item__title {
+    font-size: 0.8rem;
+  }
+
+  .audit-item__meta {
+    font-size: 0.68rem;
+  }
+
+  /* =====================================================
+     MOBILE: SETTINGS
+     ===================================================== */
+  .settings-section__item {
+    padding: var(--space-3) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  .settings-section__label {
+    font-size: 0.85rem;
+  }
+
+  .settings-section__desc {
+    font-size: 0.72rem;
+  }
+
+  /* =====================================================
+     MOBILE: LIST-DATA PAGE (table)
+     ===================================================== */
+  .data-table {
+    font-size: 0.78rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px var(--space-2);
+  }
+
+  /* =====================================================
+     MOBILE: OTB GRID
+     ===================================================== */
+  .otb-grid {
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)) !important;
+    gap: 4px !important;
+  }
+
+  .otb-grid-cell {
+    width: auto !important;
+    height: 52px !important;
+    padding: 2px !important;
+  }
+
+  /* =====================================================
+     MOBILE: OLT / GTGO GRID
+     ===================================================== */
+  .gtgo-port {
+    width: 52px;
+    min-height: 52px;
+    font-size: 0.62rem;
+  }
+
+  /* =====================================================
+     MOBILE: TOAST POSITION
+     ===================================================== */
+  #toast-container {
+    top: auto;
+    bottom: calc(var(--bottom-nav-h) + var(--space-3));
+    width: calc(100% - var(--space-6));
+  }
+
+  /* =====================================================
+     MOBILE: PORT DETAIL MODAL
+     ===================================================== */
+  .port-detail-header {
+    padding: var(--space-3);
+  }
+
+  .port-detail-body {
+    padding: var(--space-3);
+  }
+
+  /* =====================================================
+     MOBILE: SITE DETAIL HEADER
+     ===================================================== */
+  .site-detail-name {
+    font-size: 1.4rem;
+  }
+
+  /* =====================================================
+     MOBILE: BOTTOM NAV SAFE AREA
+     ===================================================== */
+  .app-bottom-nav {
+    height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .app-main {
+    padding-bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* =====================================================
+     MOBILE: PANEL ROW LABEL
+     ===================================================== */
+  .panel-row-label,
+  div[style*="font-family:var(--font-mono)"][style*="font-size:0.75rem"] {
+    font-size: 0.65rem !important;
+  }
+
+  /* =====================================================
+     MOBILE: DEVICE HEADER TOP SECTION
+     ===================================================== */
+  /* Stack action buttons vertically on very small screens */
+  @media (max-width: 380px) {
+    .device-detail-header {
+      flex-wrap: wrap;
+    }
+
+    .device-detail-name {
+      font-size: 1rem;
+    }
+  }
+}
+
+/* =====================================================
+   MOBILE: VIEWPORT META SUPPORT HELPERS
+   (Prevents horizontal overflow on small devices)
+   ===================================================== */
+@media (max-width: 767px) {
+  /* Prevent horizontal overflow caused by wide fixed elements */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better touch targets */
+  button, a, [role="button"] {
+    min-height: 40px;
+  }
+
+  /* Improve tap feedback */
+  .panel-port:active,
+  .device-list-item:active,
+  .app-sidebar__item:active {
+    opacity: 0.8;
+  }
+}
