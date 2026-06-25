@@ -101,18 +101,19 @@ export async function renderOTBView(device, container) {
 
     // OTB 144 (12 cols): responsive 1fr columns so grid fills container width without scroll
     // OTB 96 (24 cols): fixed 80px columns so cells are large enough, with horizontal scroll
-    const cellMinPx = cols <= 12 ? null : 80; // null = use 1fr
-    const fontSizeNum = cols <= 12 ? '1.0' : '0.8';
-    const labelFontSize = cols <= 12 ? '0.68' : '0.6';
-    const connFontSize = cols <= 12 ? '0.62' : '0.55';
-    const notesFontSize = cols <= 12 ? '0.52' : '0.46';
+    const isMobile = window.innerWidth <= 767;
+    const cellMinPx = cols <= 12 ? null : (isMobile ? 52 : 80); // smaller on mobile
+    const fontSizeNum = cols <= 12 ? (isMobile ? '0.7' : '1.0') : (isMobile ? '0.6' : '0.8');
+    const labelFontSize = cols <= 12 ? (isMobile ? '0.52' : '0.68') : (isMobile ? '0.48' : '0.6');
+    const connFontSize = cols <= 12 ? (isMobile ? '0.46' : '0.62') : (isMobile ? '0.44' : '0.55');
+    const notesFontSize = cols <= 12 ? (isMobile ? '0.4' : '0.52') : (isMobile ? '0.38' : '0.46');
     const gridCols = cellMinPx ? `repeat(${cols}, ${cellMinPx}px)` : `repeat(${cols}, 1fr)`;
     const gridMinWidth = cellMinPx ? `${cols * cellMinPx}px` : '100%';
 
     // Render Grid
     let html = `
       <div class="card" style="overflow-x:auto;padding:var(--space-5)">
-        <div style="min-width:${gridMinWidth};display:grid;grid-template-columns:${gridCols};gap:5px;align-items:start">
+        <div style="min-width:${gridMinWidth};display:grid;grid-template-columns:${gridCols};gap:${isMobile ? '3' : '5'}px;align-items:start">
     `;
 
     for (let r = 0; r < rowsCount; r++) {
@@ -145,7 +146,7 @@ export async function renderOTBView(device, container) {
                data-status="${p.status || 'empty'}"
                data-label="${label.toLowerCase()}"
                style="
-                  ${cellMinPx ? `width:${cellMinPx}px;height:${cellMinPx}px;` : 'aspect-ratio:1/1;'}
+                  ${cellMinPx ? `width:${cellMinPx}px;height:${cellMinPx}px;` : `aspect-ratio:1/1;`}
                   box-sizing: border-box;
                   overflow: hidden;
                   border: 2px solid ${tubeColor.hex};

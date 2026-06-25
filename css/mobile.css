@@ -283,15 +283,15 @@
   /* =====================================================
      MOBILE: OTB GRID
      ===================================================== */
-  .otb-grid {
-    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)) !important;
-    gap: 4px !important;
+  /* OTB 144 (12-col): let JS fill 1fr; make cells smaller on mobile */
+  .otb-grid-cell[style*="aspect-ratio"] {
+    /* 1fr cells: ensure they look fine at small sizes */
+    min-height: 52px !important;
   }
 
-  .otb-grid-cell {
-    width: auto !important;
-    height: 52px !important;
-    padding: 2px !important;
+  /* Card containing the OTB grid: reduce padding so more columns fit */
+  .card[style*="overflow-x:auto"] {
+    padding: var(--space-3) !important;
   }
 
   /* =====================================================
