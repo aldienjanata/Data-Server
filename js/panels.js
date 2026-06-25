@@ -397,7 +397,15 @@ export async function renderGTGOView(device, container) {
       `;
 
       for (let slot = 0; slot < SLOTS; slot++) {
-        const label = `1/${START_SLOT + slot}/${port}`;
+        const slotNum = START_SLOT + slot;
+        let label = `1/${slotNum}/${port}`;
+        
+        // Special override for OLT Banyumas Slots 10 and 11
+        if (siteName === 'Banyumas' && (slotNum === 10 || slotNum === 11)) {
+          const smxaLabels = ['Cli', '10/100M', 'Diag', 'Micro SD', 'XG1', 'XG2', 'XG3', 'XG4'];
+          label = smxaLabels[port - 1] || label;
+        }
+        
         const calcPortNumber = slot * PORTS_PER_SLOT + port;
         const p = portMap[label] || ports.find(px => px.port_number === calcPortNumber);
         const status = p?.status || 'empty';
