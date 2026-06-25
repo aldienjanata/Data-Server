@@ -455,7 +455,7 @@ window.runSeedBanyumas = async function() {
 
     const { data: existingDevs } = await supabase.from('devices').select('name').eq('site_id', siteId);
     const existingNames = new Set((existingDevs || []).map(d => d.name));
-    const targetDevices = ['X86 Jadul BMS-01','X86 BMS-02','X86 BMS-03','CCR2116-12S-4S+',
+    const targetDevices = ['X86 BMS-01','X86 BMS-02','X86 BMS-03','CCR2116-12S-4S+',
       'CWDM MUX DEMUX 8CH','Ericsson 70060CX-32S','Server Facebook','Server YouTube',
       'Server Tiktok','X86 Server Speedtest','Server Proxmox','CCR1036-8G-2S+',
       'DELL Server Speedtest','JUNIPER MX204','X86 RO Dedicated'];
@@ -484,7 +484,7 @@ window.runSeedBanyumas = async function() {
     const defaultTypeId = typeMap['CISCO'] || Object.values(typeMap)[0];
 
     const newDevices = [
-      { name: 'X86 Jadul BMS-01', sort_order: 10, total_ports: 2, desc: JSON.stringify([{ label: "Ports", ports: [1,2] }]), portLabels: {} },
+      { name: 'X86 BMS-01', sort_order: 10, total_ports: 2, desc: JSON.stringify([{ label: "Ports", ports: [1,2] }]), portLabels: {} },
       { name: 'X86 BMS-02', sort_order: 11, total_ports: 8, desc: JSON.stringify([{ label: "SFP+", ports: [1,2,3,4] }, { label: "Ethernet", ports: [5,6,7,8] }]), portLabels: {1:"SFP+ 1",2:"SFP+ 2",3:"SFP+ 3",4:"SFP+ 4",5:"ETH 1",6:"ETH 2",7:"ETH 3",8:"ETH 4"} },
       { name: 'X86 BMS-03', sort_order: 12, total_ports: 12, desc: JSON.stringify([{ label: "SFP+", ports: [1,2,3,4] }, { label: "ETH", ports: [5,6,7,8,9,10,11,12] }]), portLabels: {1:"SFP+ 1",2:"SFP+ 2",3:"SFP+ 3",4:"SFP+ 4",5:"ETH 1",6:"ETH 2",7:"ETH 3",8:"ETH 4",9:"ETH 5",10:"ETH 6",11:"ETH 7",12:"ETH 8"} },
       { name: 'CCR2116-12S-4S+', sort_order: 13, total_ports: 16, desc: JSON.stringify([{ label: "SFP+", ports: [1,2,3,4] }, { label: "GIGABIT ETHERNET", ports: Array.from({length:12},(_,i)=>i+5) }]), portLabels: Object.fromEntries([...Array.from({length:4},(_,i)=>[i+1,`SFP+ ${i+1}`]),...Array.from({length:12},(_,i)=>[i+5,`ETH ${i+1}`])]) },

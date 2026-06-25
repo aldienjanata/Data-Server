@@ -1025,6 +1025,25 @@ async function initApp() {
 
   // Setup event listeners
   setupOnlineOfflineHandlers();
+  
+  // ====== TEMP MIGRATION: Rename Jadul ======
+  setTimeout(async () => {
+    try {
+      const client = (await import('./supabase.js')).getClient();
+      const { data } = await client.from('devices').select('id').eq('name', 'X86 Jadul BMS-01');
+      if (data && data.length > 0) {
+        await client.from('devices').update({ name: 'X86 BMS-01' }).eq('id', data[0].id);
+        console.log('[Migration] Renamed device to X86 BMS-01');
+        // Force refresh if they are on that device page
+        if (location.hash.includes('Jadul')) {
+          location.hash = location.hash.replace('Jadul%20', '').replace('Jadul ', '');
+          window.location.reload();
+        }
+      }
+    } catch (e) {}
+  }, 2000);
+  // ==========================================
+
   window.addEventListener('popstate', () => Router.handleHashChange());
   window.addEventListener('hashchange', () => Router.handleHashChange());
 
