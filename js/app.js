@@ -1026,19 +1026,27 @@ async function initApp() {
   // Setup event listeners
   setupOnlineOfflineHandlers();
   
-  // ====== TEMP MIGRATION: Rename Jadul ======
+  // ====== TEMP MIGRATION: Rename and swap sort_order ======
   setTimeout(async () => {
     try {
       const client = (await import('./supabase.js')).getClient();
-      const { data } = await client.from('devices').select('id').eq('name', 'X86 Jadul BMS-01');
-      if (data && data.length > 0) {
-        await client.from('devices').update({ name: 'X86 BMS-01' }).eq('id', data[0].id);
-        console.log('[Migration] Renamed device to X86 BMS-01');
-        // Force refresh if they are on that device page
-        if (location.hash.includes('Jadul')) {
-          location.hash = location.hash.replace('Jadul%20', '').replace('Jadul ', '');
-          window.location.reload();
-        }
+      // Rename X86 BMS-01 or X86 Jadul BMS-01
+      const { data: d1 } = await client.from('devices').select('id, name').or('name.eq.X86 BMS-01,name.eq.X86 Jadul BMS-01');
+      if (d1 && d1.length > 0) {
+        await client.from('devices').update({ name: 'X86 HP Proliant RFTTH-CLP', sort_order: 19 }).eq('id', d1[0].id);
+        console.log('[Migration] Renamed device to X86 HP Proliant RFTTH-CLP and set sort_order 19');
+      }
+      // Update X86 Server Speedtest
+      const { data: d2 } = await client.from('devices').select('id, name').eq('name', 'X86 Server Speedtest');
+      if (d2 && d2.length > 0) {
+        await client.from('devices').update({ sort_order: 10 }).eq('id', d2[0].id);
+        console.log('[Migration] Set X86 Server Speedtest sort_order to 10');
+      }
+      
+      // Force refresh if they are on the old device page
+      if (location.hash.includes('BMS-01')) {
+        location.hash = location.hash.replace('BMS-01', 'HP%20Proliant%20RFTTH-CLP');
+        window.location.reload();
       }
     } catch (e) {}
   }, 2000);
