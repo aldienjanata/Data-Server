@@ -1,5 +1,5 @@
 -- ============================================================
--- FIX CWDM PORTS (HAPUS TX RX & RX TX)
+-- FIX CWDM PORTS (HAPUS TX RX & RX TX) - Versi Urutan Benar
 -- Copy paste di Supabase Dashboard > SQL Editor > New Query
 -- ============================================================
 
@@ -14,11 +14,11 @@ BEGIN
     -- Hapus port ke 5 (TX RX) dan 10 (RX TX)
     DELETE FROM port_connections WHERE device_id = v_dev_id AND port_number IN (5, 10);
     
-    -- Geser nomor port agar tidak bolong (6 jadi 5, 7 jadi 6, dst)
-    UPDATE port_connections SET port_number = 8 WHERE device_id = v_dev_id AND port_number = 9;
-    UPDATE port_connections SET port_number = 7 WHERE device_id = v_dev_id AND port_number = 8;
-    UPDATE port_connections SET port_number = 6 WHERE device_id = v_dev_id AND port_number = 7;
+    -- Geser nomor port (urutannya dibalik agar tidak bentrok / duplicate key)
     UPDATE port_connections SET port_number = 5 WHERE device_id = v_dev_id AND port_number = 6;
+    UPDATE port_connections SET port_number = 6 WHERE device_id = v_dev_id AND port_number = 7;
+    UPDATE port_connections SET port_number = 7 WHERE device_id = v_dev_id AND port_number = 8;
+    UPDATE port_connections SET port_number = 8 WHERE device_id = v_dev_id AND port_number = 9;
     
     -- Update layout dan total port di perangkat CWDM
     UPDATE devices 

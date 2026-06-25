@@ -208,7 +208,7 @@ const DevicesAPI = {
   async getAll() {
     const { data, error } = await supabase
       .from('devices')
-      .select('id, name, site_id, device_types(name)')
+      .select('id, name, site_id, device_types(name, icon)')
       .eq('is_active', true)
       .order('sort_order');
     if (error) throw error;
