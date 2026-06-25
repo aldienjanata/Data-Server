@@ -307,6 +307,7 @@ export async function renderGTGOView(device, container) {
       portMap[String(p.port_number)] = p;
     });
 
+    const siteName = device.sites?.name || '';
     let SLOTS = 16;
     let START_SLOT = 3;
     let PORTS_PER_SLOT = 8;
@@ -320,7 +321,6 @@ export async function renderGTGOView(device, container) {
       } catch(e) {}
     } else {
       // Fallback for legacy devices
-      const siteName = device.sites?.name || '';
       if (siteName === 'Kebumen') {
         SLOTS = 14;
         START_SLOT = 2;
