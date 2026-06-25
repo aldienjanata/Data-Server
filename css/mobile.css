@@ -13,6 +13,10 @@
     gap: var(--space-2);
   }
 
+  #mobile-back-btn.is-active {
+    display: flex !important;
+  }
+
   .app-header__logo-text {
     display: none; /* Hide text label on mobile, keep icon */
   }

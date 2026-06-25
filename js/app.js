@@ -47,6 +47,19 @@ export function showToast(message, type = 'info', duration = 3500) {
 }
 
 // =====================================================
+// MOBILE BACK BUTTON
+// =====================================================
+window.handleMobileBack = function() {
+  if (AppState.currentPage === 'device' && AppState.currentSiteId) {
+    Router.navigate('site', {siteId: AppState.currentSiteId});
+  } else if (AppState.currentPage === 'site') {
+    Router.navigate('sites');
+  } else {
+    window.history.back();
+  }
+};
+
+// =====================================================
 // GO TO DEVICE HELPER
 // =====================================================
 window.goToDevice = async function(deviceId) {
@@ -816,6 +829,15 @@ function updateBottomNav(page, params = {}) {
     item.classList.toggle('active', item.dataset.page === page);
   });
   
+  const backBtn = document.getElementById('mobile-back-btn');
+  if (backBtn) {
+    if (page === 'site' || page === 'device') {
+      backBtn.classList.add('is-active');
+    } else {
+      backBtn.classList.remove('is-active');
+    }
+  }
+
   // Update dynamic sidebar items
   document.querySelectorAll('.sidebar-dynamic').forEach(item => {
     let isActive = false;
@@ -834,24 +856,32 @@ function updateBottomNav(page, params = {}) {
 function renderHeader(siteName = '') {
   return `
     <header class="app-header">
-      <div class="app-header__logo">
-        <div class="app-header__logo-icon" style="background: transparent; box-shadow: none; width: auto;">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 6px rgba(59,130,246,0.5));">
-            <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
-            <path d="M4 12h16"/>
-            <circle cx="8" cy="8" r="1" fill="#3b82f6" stroke="none"/>
-            <circle cx="8" cy="16" r="1" fill="#8b5cf6" stroke="none"/>
-            <line x1="12" y1="8" x2="16" y2="8"/>
-            <line x1="12" y1="16" x2="16" y2="16"/>
-            <defs>
-              <linearGradient id="logoGrad" x1="0" y1="0" x2="24" y2="24">
-                <stop offset="0%" stop-color="#3b82f6"/>
-                <stop offset="100%" stop-color="#8b5cf6"/>
-              </linearGradient>
-            </defs>
+      <div style="display:flex;align-items:center;">
+        <button id="mobile-back-btn" class="btn btn-ghost btn-icon" onclick="window.handleMobileBack()" title="Kembali" style="display:none;margin-right:8px;padding:4px;width:32px;height:32px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
           </svg>
+        </button>
+        <div class="app-header__logo">
+          <div class="app-header__logo-icon" style="background: transparent; box-shadow: none; width: auto;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 6px rgba(59,130,246,0.5));">
+              <path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
+              <path d="M4 12h16"/>
+              <circle cx="8" cy="8" r="1" fill="#3b82f6" stroke="none"/>
+              <circle cx="8" cy="16" r="1" fill="#8b5cf6" stroke="none"/>
+              <line x1="12" y1="8" x2="16" y2="8"/>
+              <line x1="12" y1="16" x2="16" y2="16"/>
+              <defs>
+                <linearGradient id="logoGrad" x1="0" y1="0" x2="24" y2="24">
+                  <stop offset="0%" stop-color="#3b82f6"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <span>ServerData</span>
         </div>
-        <span>ServerData</span>
       </div>
       ${siteName ? `
         <div class="app-header__site-badge" onclick="App.navigate('dashboard')">
