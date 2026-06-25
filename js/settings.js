@@ -113,18 +113,7 @@ export async function renderSettingsPage(container) {
 
       </div>
 
-      ${!localStorage.getItem('seed_banyumas_done') ? `
-      <!-- Seed Banyumas -->
-      <div style="margin-top:var(--space-6);padding:var(--space-5);background:rgba(239,68,68,0.1);border:1px dashed #ef4444;border-radius:var(--radius-lg)" id="banyumas-seed-container">
-        <h3 style="color:#ef4444;margin-bottom:var(--space-2);font-size:1.1rem;font-weight:700">⚠️ Quick Setup Banyumas</h3>
-        <p style="color:var(--color-text-muted);font-size:0.85rem;margin-bottom:var(--space-4)">
-          Klik tombol di bawah untuk membuat 13 perangkat beserta port secara otomatis. Tombol ini akan hilang setelah instalasi sukses.
-        </p>
-        <button class="btn btn-sm" style="background:#ef4444;color:white;border:none" onclick="window.runSeedBanyumas()" id="btn-seed-banyumas">
-          🚀 Install 13 Perangkat Banyumas (Hanya 1x Klik)
-        </button>
-      </div>
-      ` : ''}
+
 
       <!-- Sign Out -->
       <div style="margin-top:var(--space-4)">
@@ -134,8 +123,8 @@ export async function renderSettingsPage(container) {
       </div>
 
       <div style="text-align:center;margin-top:var(--space-6);color:var(--color-text-muted);font-size:0.75rem">
-        Server Data Manager © 2025<br>
-        Powered by Supabase + PWA
+        Server Data Manager © 2026<br>
+        Powered by Aldi
       </div>
     </div>
   `;
@@ -309,8 +298,8 @@ async function processImportFile(file) {
       </div>
 
       <div style="text-align:center;margin-top:var(--space-6);color:var(--color-text-muted);font-size:0.75rem">
-        Server Data Manager © 2025<br>
-        Powered by Supabase + PWA
+        Server Data Manager © 2026<br>
+        Powered by Aldi
       </div>
     </div>
   `;
