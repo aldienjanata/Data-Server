@@ -186,40 +186,42 @@ function renderTable() {
   };
 
   container.innerHTML = `
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Site</th>
-          <th>Perangkat</th>
-          <th>Port</th>
-          <th>Core Label</th>
-          <th>Koneksi / Tujuan</th>
-          <th>Keterangan</th>
-          <th>Status</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        ${pageData.map(p => `
+    <div style="width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch;">
+      <table class="data-table" style="min-width:800px;">
+        <thead>
           <tr>
-            <td><span class="highlight">${p.devices?.sites?.name || '-'}</span></td>
-            <td>${p.devices?.name || '-'} <span style="color:var(--color-text-muted);font-size:0.7rem">(${p.devices?.device_types?.name || '-'})</span></td>
-            <td style="font-family:var(--font-mono)">${formatDevicePortLabel(p.devices, p.port_number, p.port_label)}</td>
-            <td>${p.core_label || '-'}</td>
-            <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
-            <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
-            <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
-            <td>
-              <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"
-                onclick="App.navigate('device',{siteId:'${p.devices?.sites?.code || ''}', deviceId:'${p.device_id}', deviceName:'${p.devices?.name || ''}', portId:'${p.id}'})"
-                title="Lihat di Perangkat">
-                🔌 Lihat
-              </button>
-            </td>
+            <th>Site</th>
+            <th>Perangkat</th>
+            <th>Port</th>
+            <th>Core Label</th>
+            <th>Koneksi / Tujuan</th>
+            <th>Keterangan</th>
+            <th>Status</th>
+            <th></th>
           </tr>
-        `).join('')}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          ${pageData.map(p => `
+            <tr>
+              <td><span class="highlight">${p.devices?.sites?.name || '-'}</span></td>
+              <td>${p.devices?.name || '-'} <span style="color:var(--color-text-muted);font-size:0.7rem">(${p.devices?.device_types?.name || '-'})</span></td>
+              <td style="font-family:var(--font-mono)">${formatDevicePortLabel(p.devices, p.port_number, p.port_label)}</td>
+              <td>${p.core_label || '-'}</td>
+              <td style="${p.connection_label ? 'color:var(--color-filled)' : ''}">${p.connection_label || '-'}</td>
+              <td>${p.connection_detail ? p.connection_detail + '<br>' : ''}<span style="font-size:0.75rem;color:var(--color-text-muted)">${p.notes || ''}</span></td>
+              <td><span class="badge badge-${p.status === 'filled' ? 'filled' : 'empty'}">${getStatusLabel(p.status)}</span></td>
+              <td>
+                <button class="btn btn-ghost btn-sm" style="white-space:nowrap;font-size:0.75rem"
+                  onclick="App.navigate('device',{siteId:'${p.devices?.sites?.code || ''}', deviceId:'${p.device_id}', deviceName:'${p.devices?.name || ''}', portId:'${p.id}'})"
+                  title="Lihat di Perangkat">
+                  🔌 Lihat
+                </button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
     
     <!-- Pagination Controls -->
     ${totalPages > 1 ? `
