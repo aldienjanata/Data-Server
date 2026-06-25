@@ -4,7 +4,7 @@
 import { initSupabase, SitesAPI, DevicesAPI, PortsAPI, AuditAPI } from './supabase.js';
 import { initAuth, currentUser, currentProfile, canEdit, isGuest, renderLoginPage, initLoginAnimation, handleSignOut } from './auth.js';
 import { renderDashboard } from './dashboard.js';
-import { renderSitePage } from './sites.js';
+import { renderSitePage, renderAllSitesList } from './sites.js';
 import { renderDevicePage } from './devices.js';
 import { renderSettingsPage } from './settings.js';
 import { OfflineQueue } from './supabase.js';
@@ -583,6 +583,7 @@ const Router = {
   routes: {
     'login':    renderLoginRoute,
     'dashboard': renderDashboardRoute,
+    'sites':    renderSitesRoute,
     'site':     renderSiteRoute,
     'device':   renderDeviceRoute,
     'settings': renderSettingsRoute,
@@ -675,6 +676,13 @@ async function renderDashboardRoute() {
   showBottomNav();
   setPageContent('<div class="page-content"><div class="skeleton" style="height:400px;border-radius:var(--radius-xl)"></div></div>');
   await renderDashboard(document.querySelector('.page-content'));
+}
+
+async function renderSitesRoute() {
+  document.getElementById('app')?.classList.remove('is-login');
+  showBottomNav();
+  setPageContent('<div class="page-content"><div class="loading-spinner" style="margin:40px auto;display:block"></div></div>');
+  await renderAllSitesList(document.querySelector('.page-content'));
 }
 
 async function renderSiteRoute(params) {
@@ -963,6 +971,11 @@ async function initApp() {
       <button class="bottom-nav__item" data-page="list-data" onclick="App.navigate('list-data')">
         <span class="bottom-nav__icon">📋</span>
         <span class="bottom-nav__label">Data Port</span>
+      </button>
+
+      <button class="bottom-nav__item" data-page="sites" onclick="App.navigate('sites')">
+        <span class="bottom-nav__icon">📍</span>
+        <span class="bottom-nav__label">Daftar Site</span>
       </button>
 
       <button class="bottom-nav__item" data-page="audit" onclick="App.navigate('audit')">

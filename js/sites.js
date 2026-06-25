@@ -483,3 +483,73 @@ window.submitEditSite = async function(siteId) {
     btn.classList.remove('loading'); btn.disabled = false;
   }
 };
+
+export async function renderAllSitesList(container) {
+  try {
+    const sites = await SitesAPI.getAll();
+    const statsAll = await Promise.all(sites.map(s => SitesAPI.getStats(s.id)));
+    const siteStats = sites.map((s, i) => ({ ...s, stats: statsAll[i] }));
+    
+    const cardsHtml = siteStats.map(site => {
+      const stats = site.stats;
+      const pct = calcPercent(stats?.filled || 0, stats?.total || 0);
+      const color = getSiteColor(site.name);
+      const slug = site.code || site.name.replace(/\s+/g, '-').toLowerCase();
+      
+      return `
+        <div class="site-card" onclick="App.navigate('site', {siteId:'${slug}'})" style="--site-color:${color}">
+          <div class="site-card__header">
+            <div>
+              <div class="site-card__name">${site.name}</div>
+              <div class="site-card__location">📍 ${site.location || 'Jawa Tengah'}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.5rem;font-weight:800;color:${color}">${pct}%</div>
+              <div style="font-size:0.7rem;color:var(--color-text-muted)">terisi</div>
+              <svg width="40" height="40" viewBox="0 0 40 40" style="margin-top:8px">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="var(--color-bg-overlay)" stroke-width="4"/>
+                <circle cx="20" cy="20" r="16" fill="none" stroke="${color}" stroke-width="4"
+                        stroke-dasharray="${2 * Math.PI * 16}" 
+                        stroke-dashoffset="${2 * Math.PI * 16 * (1 - pct / 100)}"
+                        stroke-linecap="round"
+                        transform="rotate(-90 20 20)"
+                        style="transition:stroke-dashoffset 1s ease"/>
+              </svg>
+            </div>
+          </div>
+          <div class="site-card__stats">
+            <div class="site-card__stat">
+              <div class="site-card__stat-value">${stats?.devices || 0}</div>
+              <div class="site-card__stat-label">Perangkat</div>
+            </div>
+            <div class="site-card__stat">
+              <div class="site-card__stat-value" style="color:var(--color-filled)">${stats?.filled || 0}</div>
+              <div class="site-card__stat-label">Terisi</div>
+            </div>
+            <div class="site-card__stat">
+              <div class="site-card__stat-value">${stats?.total || 0}</div>
+              <div class="site-card__stat-label">Total Port</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="stagger">
+        <div class="section-header" style="margin-bottom:var(--space-6)">
+          <div class="section-title">
+            <span class="section-title__icon">📍</span>
+            Daftar Site
+          </div>
+          ${canEdit() ? `<button class="btn btn-primary btn-sm" onclick="showAddSiteModal()">+ Tambah Site</button>` : ''}
+        </div>
+        <div class="sites-grid">
+          ${cardsHtml}
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+  }
+}
